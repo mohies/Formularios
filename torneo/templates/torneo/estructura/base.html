@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Aplicación{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+</head>
+<body>
+
+    {% include 'torneo/estructura/menu.html' %}
+  
+    <img src="{% static 'imagenes/league-of-legends.jpeg' %}" alt="Logo">
+ 
+ 
+    {% block header %}
+    <header>
+        <h1>Bienvenido a Mi Aplicación</h1>
+    </header>
+    {% endblock %}
+
+  
+    <main>
+        {% block content %}
+        <p>Este es el contenido principal.</p>
+        {% endblock %}
+    </main>
+
+
+    {% include 'torneo/estructura/footer.html' %}
+
+    <script src="{% static 'javascript/script.js' %}"></script>
+</body>
+</html>

@@ -2,25 +2,14 @@ from django.shortcuts import render
 from .models import *
 from django.db.models import Prefetch,Count,Q
 from .forms import TorneoForm
-# Create your views here.
+from django.contrib import messages
+
 def index(request):
     return render(request, 'index.html')
 
 def crear_torneo(request):
-    if request.method == "POST":
-        # Procesar datos enviados
-        form = TorneoForm(request.POST)
-        if form.is_valid():
-            # Aquí puedes manejar los datos del formulario
-            # Por ejemplo, crear una instancia del modelo Torneo
-            # torneo = Torneo.objects.create(**form.cleaned_data)
-            # torneo.save()
-            return render(request, 'exito.html')  # Redirigir a una página de éxito
-    else:
-        # Mostrar el formulario vacío
-        form = TorneoForm()
-    
-    return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': form})
+    formulario=TorneoForm()
+    return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': formulario})
 
 
 #Distintos errores de las paginas web

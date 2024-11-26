@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 from .models import *
 from django.db.models import Prefetch,Count,Q
 from .forms import TorneoForm
@@ -7,9 +7,28 @@ from django.contrib import messages
 def index(request):
     return render(request, 'index.html')
 
+
+
 def crear_torneo(request):
-    formulario=TorneoForm()
-    return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': formulario})
+    
+    datosFormulario = None
+    if request.method == "POST":
+        datosFormulario = request.POST
+        
+    formulario = TorneoForm(datosFormulario)
+    if (request.method == "POST"):
+        if formulario.is_valid():
+            try:
+                # Guarda el libro en la base de datos
+                formulario.save()
+                return redirect("index")
+            except Exception as error:
+                print(error)
+    
+    return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': formulario}) 
+
+
+
 
 
 #Distintos errores de las paginas web

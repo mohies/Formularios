@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mi Aplicación{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+
+    {% load django_bootstrap5 %}
+        {% bootstrap_css %}
+
 </head>
 <body>
 
@@ -25,6 +29,8 @@
         {% block content %}
         <p>Este es el contenido principal.</p>
         {% endblock %}
+        {% block contenido %}
+        {% endblock %}  
     </main>
 
 

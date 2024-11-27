@@ -4,6 +4,7 @@ from .models import *
 from datetime import datetime, date
 
 
+
 class TorneoForm(forms.ModelForm):
     class Meta:
         model = Torneo  # Modelo asociado al formulario
@@ -72,3 +73,54 @@ class TorneoForm(forms.ModelForm):
 
         # Siempre devolvemos el conjunto de datos
         return self.cleaned_data
+
+class EquipoForm(forms.ModelForm):
+    class Meta:
+        model = Equipo
+        fields = ['nombre', 'logotipo', 'fecha_ingreso', 'puntos_contribuidos']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Introduce el nombre del equipo'}),
+            'logotipo': forms.URLInput(attrs={'class': 'form-control'}),
+            'fecha_ingreso': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'puntos_contribuidos': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'nombre': "Nombre del Equipo",
+            'logotipo': "URL del Logotipo",
+            'fecha_ingreso': "Fecha de Ingreso",
+            'puntos_contribuidos': "Puntos Contribuidos",
+        }
+        help_texts = {
+            'nombre': "Máximo 200 caracteres.",
+            'logotipo': "URL de la imagen del logotipo del equipo.",
+            'fecha_ingreso': "Fecha en que el equipo se unió.",
+            'puntos_contribuidos': "Puntos que el equipo ha contribuido en total.",
+        }
+
+    def clean(self):
+        # Llamada al método clean() de la clase base
+        cleaned_data = super().clean()
+
+        # Acceder a los valores de los campos limpios
+        nombre = cleaned_data.get('nombre')
+        puntos_contribuidos = cleaned_data.get('puntos_contribuidos')
+
+        # Validar que el nombre no esté vacío ni solo contenga espacios
+        if not nombre or not nombre.strip():
+            self.add_error('nombre', 'El nombre del equipo es obligatorio.')
+
+        # Validación de unicidad del nombre
+        if nombre and Equipo.objects.filter(nombre=nombre).exclude(id=self.instance.id).exists():
+            self.add_error('nombre', 'Ya existe un equipo con ese nombre.')
+
+        # Validar que los puntos contribuidos sean positivos
+        if puntos_contribuidos is not None and puntos_contribuidos < 0:
+            self.add_error('puntos_contribuidos', 'Los puntos contribuidos deben ser un valor positivo.')
+
+        return cleaned_data
+
+    
+
+
+
+   

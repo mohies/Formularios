@@ -15,7 +15,7 @@
                    name="{{ formulario.nombre.html_name }}" 
                    class="form-control {% if formulario.nombre.errors %} is-invalid{% elif formulario.is_bound %} is-valid{% endif %}" 
                    id="{{ formulario.nombre.id_for_label }}" 
-                   value="{{ formulario.nombre.value }}">
+                   value="{{ formulario.nombre.value|default:'' }}">
             <div class="form-text">
                 {{ formulario.nombre.help_text }}
             </div>

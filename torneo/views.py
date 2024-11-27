@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect
 from .models import *
 from django.db.models import Prefetch,Count,Q
-from .forms import TorneoForm
+from .forms import *
 from django.contrib import messages
 
 def index(request):
@@ -26,6 +26,27 @@ def crear_torneo(request):
                 print(error)
     
     return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': formulario}) 
+
+
+def crear_equipo(request):
+    datosFormulario = None  # Esto es para capturar los datos del formulario si se envían por POST
+
+    # Si la solicitud es POST, significa que se está enviando el formulario
+    if request.method == "POST":
+        datosFormulario = request.POST
+        
+    formulario = EquipoForm(datosFormulario)  # Creamos una instancia del formulario con los datos de la solicitud
+    if request.method == "POST" and formulario.is_valid():  # Si el formulario es válido
+        try:
+            formulario.save()  # Guarda el equipo en la base de datos
+            return redirect("index")  # Redirige al índice o la página que desees
+        except Exception as error:
+            print(error)  # Imprime el error si ocurre alguno
+
+    return render(request, 'torneo/formulario/crear_equipo.html', {'formulario': formulario})  # Renderiza el formulario
+
+
+
 
 
 

@@ -2,40 +2,43 @@
 <html lang="es">
 <head>
     {% load static %}
+    {% load django_bootstrap5 %}
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Mi Aplicación{% endblock %}</title>
+    
+    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-
-    {% load django_bootstrap5 %}
-        {% bootstrap_css %}
-
+    
+    <!-- Estilos de Bootstrap -->
+    {% bootstrap_css %}
 </head>
 <body>
-
+    <!-- Menú de navegación -->
     {% include 'torneo/estructura/menu.html' %}
   
-    <img src="{% static 'imagenes/league-of-legends.jpeg' %}" alt="Logo">
+    <!-- Imagen principal -->
+    <img src="{% static 'imagenes/league-of-legends.jpeg' %}" alt="Logo" class="img-fluid">
  
- 
+    <!-- Encabezado -->
     {% block header %}
     <header>
         <h1>Bienvenido a Mi Aplicación</h1>
     </header>
     {% endblock %}
 
-  
+    <!-- Contenido principal -->
     <main>
         {% block content %}
         <p>Este es el contenido principal.</p>
         {% endblock %}
-        {% block contenido %}
-        {% endblock %}  
     </main>
 
-
+    <!-- Pie de página -->
     {% include 'torneo/estructura/footer.html' %}
 
-    <script src="{% static 'javascript/script.js' %}"></script>
+    <!-- Scripts de Bootstrap -->
+    {% bootstrap_javascript %}
 </body>
 </html>

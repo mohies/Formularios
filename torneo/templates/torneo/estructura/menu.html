@@ -21,9 +21,16 @@
                 </ul>
             </li>
 
-            <!-- Enlace a Lista de Torneos -->
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'lista_torneo' %}">Lista de Torneos</a>
+            <!-- Dropdown de Torneos -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdownTorneos" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Torneos
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownTorneos">
+                    <li><a class="dropdown-item" href="{% url 'buscar_torneo' %}">Búsqueda Avanzada</a></li>
+                    <li><a class="dropdown-item" href="{% url 'crear_torneo' %}">Crear Torneo</a></li>
+                    <li><a class="dropdown-item" href="{% url 'lista_torneo' %}">Lista de Torneos</a></li>
+                </ul>
             </li>
         </ul>
 

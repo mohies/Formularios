@@ -98,7 +98,7 @@ def torneo_buscar_avanzado(request):
     else:
         formulario = BusquedaAvanzadaTorneoForm(None)
     
-    return render(request, 'torneo/formulario/busqueda_avanzada_datepicker.html', {"formulario": formulario})
+    return render(request, 'torneo/formulario/busqueda_avanzada.html', {"formulario": formulario})
 
 
 

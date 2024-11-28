@@ -2,6 +2,8 @@ from django import forms  # Importa el módulo de formularios
 from django.forms import ModelForm  # Importa ModelForm directamente
 from .models import *
 from datetime import datetime, date
+from django.forms import DateInput
+
 
 
 
@@ -73,6 +75,70 @@ class TorneoForm(forms.ModelForm):
 
         # Siempre devolvemos el conjunto de datos
         return self.cleaned_data
+    
+    
+class BusquedaTorneoForm(forms.Form):
+    textoBusqueda = forms.CharField(required=True)
+    
+    
+class BusquedaAvanzadaTorneoForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False)
+    
+    # Supongo que tienes una lista de categorías o algo similar en tu modelo de Torneo
+    categorias = forms.CharField(
+    required=False,
+    widget=forms.TextInput(attrs={'placeholder': 'Introduce las categorías separadas por comas'})
+)
+
+    fecha_desde = forms.DateField(label="Fecha Desde", 
+                                  required=False, 
+                                  widget=DateInput(attrs={"type": "date", "class": "form-control"}))
+
+    fecha_hasta = forms.DateField(label="Fecha Hasta", 
+                                  required=False, 
+                                  widget=forms.DateInput(format="%Y-%m-%d", 
+                                                         attrs={"type": "date", "class": "form-control"}))
+
+    # Filtrar por duración mínima de los torneos
+    duracion_minima = forms.TimeField(label="Duración mínima", 
+                                      required=False, 
+                                      widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"}))
+
+    def clean(self):
+        # Validamos con el formulario base
+        super().clean()
+
+        # Obtenemos los campos
+        textoBusqueda = self.cleaned_data.get('textoBusqueda')
+        categorias = self.cleaned_data.get('categorias')
+        fecha_desde = self.cleaned_data.get('fecha_desde')
+        fecha_hasta = self.cleaned_data.get('fecha_hasta')
+        duracion_minima = self.cleaned_data.get('duracion_minima')
+
+        # Controlamos que al menos se haya introducido un valor en uno de los campos
+        if textoBusqueda == "" and len(categorias) == 0 and fecha_desde is None and fecha_hasta is None and duracion_minima is None:
+            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('categorias', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_desde', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_hasta', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('duracion_minima', 'Debe introducir al menos un valor en un campo del formulario')
+        else:
+            # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
+            if textoBusqueda != "" and len(textoBusqueda) < 3:
+                self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
+
+            # La fecha hasta debe ser mayor o igual a la fecha desde, si ambas se introducen
+            if fecha_desde and fecha_hasta and fecha_hasta < fecha_desde:
+                self.add_error('fecha_desde', 'La fecha hasta no puede ser menor que la fecha desde')
+                self.add_error('fecha_hasta', 'La fecha hasta no puede ser menor que la fecha desde')
+
+            # Si se especifica una duración mínima, debe ser un tiempo positivo
+            if duracion_minima:
+                if duracion_minima.total_seconds() <= 0:
+                    self.add_error('duracion_minima', 'La duración mínima debe ser un tiempo válido y mayor que cero')
+
+        # Siempre devolvemos el conjunto de datos
+        return self.cleaned_data
 
 class EquipoForm(forms.ModelForm):
     class Meta:
@@ -118,6 +184,8 @@ class EquipoForm(forms.ModelForm):
             self.add_error('puntos_contribuidos', 'Los puntos contribuidos deben ser un valor positivo.')
 
         return cleaned_data
+
+
 
     
 

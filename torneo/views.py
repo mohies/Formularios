@@ -101,6 +101,52 @@ def torneo_buscar_avanzado(request):
     return render(request, 'torneo/formulario/busqueda_avanzada.html', {"formulario": formulario})
 
 
+def torneo_editar(request, torneo_id):
+    # Obtenemos el torneo correspondiente al ID proporcionado
+    torneo = Torneo.objects.get(id=torneo_id)
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del torneo actual
+    formulario = TorneoForm(datosFormulario, instance=torneo)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el torneo '{formulario.cleaned_data.get('nombre')}' correctamente."
+                )
+                return redirect('lista_torneo')  # Redirigimos a la lista de torneos
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/formulario/crear_equipo.html',
+        {"formulario": formulario, "torneo": torneo}
+    )
+    
+    
+def torneo_eliminar(request, torneo_id):
+    torneo = Torneo.objects.get(id=torneo_id)
+    try:
+        torneo.delete()
+        messages.success(request, "Se ha eliminado el torneo " + torneo.nombre + " correctamente")
+    except Exception as error:
+        print(error)
+    return redirect('lista_torneo')
+
+
+
+
 
 
 def crear_equipo(request):

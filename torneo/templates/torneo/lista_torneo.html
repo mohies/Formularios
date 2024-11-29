@@ -32,12 +32,15 @@
                                 {% endfor %}
                             </ul>
                             <div class="mt-auto">
-                                <button class="btn btn-outline-secondary">
+                                <!-- Botón para actualizar -->
+                                <a href="{% url 'torneo_editar' torneo.id %}" class="btn btn-outline-secondary">
                                     <i class="bi bi-pencil"></i>
-                                </button>
-                                <button class="btn btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
+                                </a>
+                                <!-- Botón para eliminar -->
+                              
+                                    <button type="submit" class="btn btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
                             </div>
                         </div>
                     </div>
@@ -45,8 +48,9 @@
             {% endfor %}
         </div>
     </div>
-</div>
+    
 
+{% load bootstrap_icons %} <!-- Cargar la librería bootstrap_icons -->
 
 <div class="container mt-4">
     <div class="row row-cols-1 row-cols-md-3 g-4">
@@ -67,12 +71,19 @@
                             {% endfor %}
                         </ul>
                         <div class="mt-auto">
-                            <button class="btn btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-outline-danger">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            <!-- Botón para editar -->
+                            
+                            <!-- Formulario para eliminar -->
+                            <form action="{% url 'torneo_eliminar' torneo.id %}" method="post"> 
+                                <a href="{% url 'torneo_editar' torneo.id %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+    
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger" onclick="return eliminar();">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -80,7 +91,8 @@
         {% endfor %}
     </div>
 </div>
-</div>
+
+    
 
 
 

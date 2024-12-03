@@ -163,27 +163,165 @@ class EquipoForm(forms.ModelForm):
             'puntos_contribuidos': "Puntos que el equipo ha contribuido en total.",
         }
 
-    def clean(self):
-        # Llamada al método clean() de la clase base
-        cleaned_data = super().clean()
 
-        # Acceder a los valores de los campos limpios
-        nombre = cleaned_data.get('nombre')
-        puntos_contribuidos = cleaned_data.get('puntos_contribuidos')
+
+    def clean(self):
+        # Llamamos al método clean() de la clase base
+        super().clean()
+
+        # Obtenemos los campos
+        nombre = self.cleaned_data.get('nombre')
+        logotipo = self.cleaned_data.get('logotipo')
+        fecha_ingreso = self.cleaned_data.get('fecha_ingreso')
+        puntos_contribuidos = self.cleaned_data.get('puntos_contribuidos')
 
         # Validar que el nombre no esté vacío ni solo contenga espacios
         if not nombre or not nombre.strip():
             self.add_error('nombre', 'El nombre del equipo es obligatorio.')
 
         # Validación de unicidad del nombre
-        if nombre and Equipo.objects.filter(nombre=nombre).exclude(id=self.instance.id).exists():
-            self.add_error('nombre', 'Ya existe un equipo con ese nombre.')
+        equipo_existente = Equipo.objects.filter(nombre=nombre).first()
+        if equipo_existente:
+            if self.instance and equipo_existente.id == self.instance.id:
+                pass
+            else:
+                self.add_error('nombre', 'Ya existe un equipo con ese nombre.')
+
+        # Validar que el logotipo sea una URL válida (opcional si no es obligatorio)
+        if logotipo and not logotipo.startswith(('http://', 'https://')):
+            self.add_error('logotipo', 'El logotipo debe ser una URL válida.')
+
+        # Validar que la fecha de ingreso no sea futura
+        if fecha_ingreso and fecha_ingreso > date.today():
+            self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura.')
 
         # Validar que los puntos contribuidos sean positivos
         if puntos_contribuidos is not None and puntos_contribuidos < 0:
             self.add_error('puntos_contribuidos', 'Los puntos contribuidos deben ser un valor positivo.')
 
+        # Siempre devolvemos el conjunto de datos limpios
+        return self.cleaned_data
+
+
+class BusquedaEquipoForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False)
+
+class BusquedaAvanzadaEquipoForm(forms.Form):
+    textoBusqueda = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del equipo'}),
+        label="Nombre"
+    )
+    fecha_ingreso_desde = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de ingreso desde"
+    )
+    fecha_ingreso_hasta = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de ingreso hasta"
+    )
+    puntos_minimos = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Puntos mínimos"
+    )
+    puntos_maximos = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Puntos máximos"
+    )
+
+
+    def clean(self):
+        # Misma lógica de validación que antes
+        cleaned_data = super().clean()
+
+        textoBusqueda = cleaned_data.get('textoBusqueda')
+        fecha_ingreso_desde = cleaned_data.get('fecha_ingreso_desde')
+        fecha_ingreso_hasta = cleaned_data.get('fecha_ingreso_hasta')
+        puntos_minimos = cleaned_data.get('puntos_minimos')
+        puntos_maximos = cleaned_data.get('puntos_maximos')
+
+        if not (textoBusqueda or fecha_ingreso_desde or fecha_ingreso_hasta or puntos_minimos or puntos_maximos):
+            self.add_error(None, 'Debe introducir al menos un valor en un campo del formulario')
+
+        if textoBusqueda and len(textoBusqueda) < 3:
+            self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
+
+        if fecha_ingreso_desde and fecha_ingreso_hasta and fecha_ingreso_hasta < fecha_ingreso_desde:
+            self.add_error('fecha_ingreso_hasta', 'La fecha "hasta" no puede ser menor que la fecha "desde"')
+
+        if puntos_minimos is not None and puntos_maximos is not None:
+            if puntos_minimos > puntos_maximos:
+                self.add_error('puntos_minimos', 'Los puntos mínimos no pueden ser mayores que los puntos máximos')
+                self.add_error('puntos_maximos', 'Los puntos máximos no pueden ser menores que los puntos mínimos')
         return cleaned_data
+
+
+
+class ParticipanteForm(forms.ModelForm):
+    class Meta:
+        model = Participante  # Modelo asociado al formulario
+        fields = ['usuario', 'puntos_obtenidos', 'posicion_final', 'fecha_inscripcion', 'tiempo_jugado', 'equipos']  # Campos a incluir en el formulario
+        widgets = {
+            'fecha_inscripcion': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'equipos': forms.CheckboxSelectMultiple(),
+        }
+        labels = {
+            'usuario': "Usuario",
+            'puntos_obtenidos': "Puntos Obtenidos",
+            'posicion_final': "Posición Final",
+            'fecha_inscripcion': "Fecha de Inscripción",
+            'tiempo_jugado': "Tiempo Jugado (horas)",
+            'equipos': "Equipos",
+        }
+        help_texts = {
+            'puntos_obtenidos': "Puntos obtenidos en el torneo.",
+            'posicion_final': "Posición en la que terminó el participante.",
+            'tiempo_jugado': "El tiempo total jugado por el participante en horas.",
+            'equipos': "Selecciona los equipos a los que pertenece el participante.",
+        }
+
+    def clean(self):
+        # Validamos con el modelo actual
+        super().clean()
+
+        # Obtenemos los campos
+        usuario = self.cleaned_data.get('usuario')
+        puntos_obtenidos = self.cleaned_data.get('puntos_obtenidos')
+        posicion_final = self.cleaned_data.get('posicion_final')
+        fecha_inscripcion = self.cleaned_data.get('fecha_inscripcion')
+        tiempo_jugado = self.cleaned_data.get('tiempo_jugado')
+        equipos = self.cleaned_data.get('equipos')
+
+        # Comprobamos que el usuario no esté registrado como participante
+        participante_existente = Participante.objects.filter(usuario=usuario).first()
+        if participante_existente:
+            if self.instance and participante_existente.id == self.instance.id:
+                pass
+            else:
+                self.add_error('usuario', 'Este usuario ya está registrado como participante.')
+
+        # Comprobamos que los puntos obtenidos sean positivos
+        if puntos_obtenidos is not None and puntos_obtenidos < 0:
+            self.add_error('puntos_obtenidos', 'Los puntos obtenidos no pueden ser negativos.')
+
+        # Comprobamos que la posición final sea un número positivo
+        if posicion_final is not None and posicion_final < 1:
+            self.add_error('posicion_final', 'La posición final debe ser un número positivo.')
+
+        # Comprobamos que el tiempo jugado no sea negativo
+        if tiempo_jugado is not None and tiempo_jugado < 0:
+            self.add_error('tiempo_jugado', 'El tiempo jugado no puede ser negativo.')
+
+        # Comprobamos que al menos un equipo esté seleccionado
+        if not equipos:
+            self.add_error('equipos', 'Debe seleccionar al menos un equipo para el participante.')
+
+        # Siempre devolvemos el conjunto de datos
+        return self.cleaned_data
 
 
 

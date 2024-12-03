@@ -8,7 +8,7 @@ def index(request):
     return render(request, 'index.html')
 
 def lista_torneo(request):
-    torneos = Torneo.objects.prefetch_related('participantes__usuario'   ).all()
+    torneos = Torneo.objects.prefetch_related('participantes__usuario').all()
     return render(request, 'torneo/lista_torneo.html', {'torneos': torneos})
 
 
@@ -29,7 +29,7 @@ def crear_torneo(request):
             except Exception as error:
                 print(error)
     
-    return render(request, 'torneo/formulario/crear_torneo.html', {'formulario': formulario}) 
+    return render(request, 'torneo/creartorneo/crear_torneo.html', {'formulario': formulario}) 
 
 
 """
@@ -91,14 +91,14 @@ def torneo_buscar_avanzado(request):
             # Ejecutamos la consulta
             torneos = QStorneos.all()
     
-            return render(request, 'torneo/formulario/buscar_torneo.html', {
+            return render(request, 'torneo/creartorneo/buscar_torneo.html', {
                 "torneos_mostrar": torneos,
                 "texto_busqueda": mensaje_busqueda
             })
     else:
         formulario = BusquedaAvanzadaTorneoForm(None)
     
-    return render(request, 'torneo/formulario/busqueda_avanzada.html', {"formulario": formulario})
+    return render(request, 'torneo/creartorneo/busqueda_avanzada.html', {"formulario": formulario})
 
 
 def torneo_editar(request, torneo_id):
@@ -130,7 +130,7 @@ def torneo_editar(request, torneo_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/formulario/crear_equipo.html',
+        'torneo/creartorneo/crear_torneo.html',
         {"formulario": formulario, "torneo": torneo}
     )
     
@@ -143,9 +143,6 @@ def torneo_eliminar(request, torneo_id):
     except Exception as error:
         print(error)
     return redirect('lista_torneo')
-
-
-
 
 
 
@@ -164,13 +161,130 @@ def crear_equipo(request):
         except Exception as error:
             print(error)  # Imprime el error si ocurre alguno
 
-    return render(request, 'torneo/formulario/crear_equipo.html', {'formulario': formulario})  # Renderiza el formulario
+    return render(request, 'torneo/crearequipo/crear_equipo.html', {'formulario': formulario})  # Renderiza el formulario
+
+
+def lista_equipos(request):
+    # Recuperar todos los equipos desde la base de datos
+    equipos = Equipo.objects.all()
+
+    # Pasar la lista de equipos a la plantilla
+    return render(request, 'torneo/lista_equipos.html', {
+        'equipos': equipos
+    })
+
+def equipo_buscar_avanzado(request):
+    if len(request.GET) > 0:
+        formulario = BusquedaAvanzadaEquipoForm(request.GET)
+        if formulario.is_valid():
+            
+            mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
+            
+            QSequipos = Equipo.objects.all()
+            
+            # Obtenemos los filtros del formulario
+            textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
+            fecha_ingreso_desde = formulario.cleaned_data.get('fecha_ingreso_desde')
+            fecha_ingreso_hasta = formulario.cleaned_data.get('fecha_ingreso_hasta')
+            puntos_minimos = formulario.cleaned_data.get('puntos_minimos')
+            puntos_maximos = formulario.cleaned_data.get('puntos_maximos')
+            
+            # Aplicamos los filtros según corresponda
+            if textoBusqueda:
+                QSequipos = QSequipos.filter(Q(nombre__icontains=textoBusqueda))
+                mensaje_busqueda += f" Nombre que contenga la palabra '{textoBusqueda}'\n"
+            
+            if fecha_ingreso_desde:
+                QSequipos = QSequipos.filter(fecha_ingreso__gte=fecha_ingreso_desde)
+                mensaje_busqueda += f" Fecha de ingreso desde: {fecha_ingreso_desde.strftime('%d-%m-%Y')}\n"
+            
+            if fecha_ingreso_hasta:
+                QSequipos = QSequipos.filter(fecha_ingreso__lte=fecha_ingreso_hasta)
+                mensaje_busqueda += f" Fecha de ingreso hasta: {fecha_ingreso_hasta.strftime('%d-%m-%Y')}\n"
+            
+            if puntos_minimos is not None:
+                QSequipos = QSequipos.filter(puntos__gte=puntos_minimos)
+                mensaje_busqueda += f" Puntos mínimos: {puntos_minimos}\n"
+            
+            if puntos_maximos is not None:
+                QSequipos = QSequipos.filter(puntos__lte=puntos_maximos)
+                mensaje_busqueda += f" Puntos máximos: {puntos_maximos}\n"
+            
+            # Ejecutamos la consulta
+            equipos = QSequipos.all()
+    
+            return render(request, 'torneo/crearequipo/buscar_equipo.html', {
+                "equipos_mostrar": equipos,
+                "texto_busqueda": mensaje_busqueda
+            })
+    else:
+        formulario = BusquedaAvanzadaEquipoForm(None)
+    
+    return render(request, 'torneo/crearequipo/busqueda_avanzada.html', {"formulario": formulario})
 
 
 
+def equipo_editar(request, equipo_id):
+    # Obtenemos el equipo correspondiente al ID proporcionado
+    equipo = Equipo.objects.get(id=equipo_id)
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del equipo actual
+    formulario = EquipoForm(datosFormulario, instance=equipo)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el equipo '{formulario.cleaned_data.get('nombre')}' correctamente."
+                )
+                return redirect('lista_equipo')  # Redirigimos a la lista de equipos
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/crearequipo/crear_equipo.html',  # Cambia la ruta de la plantilla según la estructura de tu proyecto
+        {"formulario": formulario, "equipo": equipo}
+    )
+    
+    
+def equipo_eliminar(request, equipo_id):
+    equipo = Equipo.objects.get(id=equipo_id)
+    try:
+        equipo.delete()
+        messages.success(request, "Se ha eliminado el equipo " + equipo.nombre + " correctamente")
+    except Exception as error:
+        print(error)
+    return redirect('lista_equipos')
 
 
-
+def crear_participante(request):
+    datosFormulario = None
+    if request.method == "POST":
+        datosFormulario = request.POST
+    
+    formulario = ParticipanteForm(datosFormulario)
+    
+    if request.method == "POST":
+        if formulario.is_valid():
+            try:
+                # Guarda el participante en la base de datos
+                formulario.save()
+                return redirect("index")  # Redirige a la página principal o cualquier otra vista
+            except Exception as error:
+                print(error)
+    
+    return render(request, 'torneo/crearparticipante/crear_participante.html', {'formulario': formulario})
 
 
 #Distintos errores de las paginas web

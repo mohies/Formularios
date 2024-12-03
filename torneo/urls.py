@@ -10,10 +10,19 @@ urlpatterns = [
     path('torneo/editar/<int:torneo_id>/', views.torneo_editar, name='torneo_editar'),
     path('torneo/eliminar/<int:torneo_id>/', views.torneo_eliminar, name='torneo_eliminar'),
     path('buscar_equipo/', views.equipo_buscar_avanzado, name='buscar_equipo'),
-    path('listaequipo',views.lista_equipos,name='lista_equipos'),
+    path('lista_equipo/',views.lista_equipos,name='lista_equipos'),
     path('equipo/editar/<int:equipo_id>/', views.equipo_editar, name='equipo_editar'),
     path('equipo/eliminar/<int:equipo_id>/', views.equipo_eliminar, name='equipo_eliminar'),
     path('crear-participante/', views.crear_participante, name='crear_participante'),
-    
+    path('buscar_participante/', views.participante_buscar_avanzado, name='buscar_participante'),
+    path('lista_participantes/',views.lista_participantes,name='lista_participantes'),
+    path('participante/editar/<int:participante_id>/', views.participante_editar, name='participante_editar'),
+    path('participante/eliminar/<int:participante_id>/', views.participante_eliminar, name='participante_eliminar'),
+    path('usuario/crear/', views.crear_usuario, name='crear_usuario'),
+    path('buscar-usuario/', views.usuario_buscar_avanzado, name='buscar_usuario'),
+    path('usuarios/', views.lista_usuarios, name='lista_usuarios'),
+    path('editar_usuario/<int:usuario_id>/', views.usuario_editar, name='usuario_editar'),
+    path('usuario/eliminar/<int:usuario_id>/', views.usuario_eliminar, name='usuario_eliminar'),
+    path('crearjuego/', views.crear_juego, name='crear_juego'),
 
 ]

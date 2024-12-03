@@ -287,6 +287,285 @@ def crear_participante(request):
     return render(request, 'torneo/crearparticipante/crear_participante.html', {'formulario': formulario})
 
 
+
+def participante_buscar_avanzado(request):
+    if len(request.GET) > 0:
+        formulario = BusquedaAvanzadaParticipanteForm(request.GET)
+        if formulario.is_valid():
+            
+            mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
+            
+            QSparticipantes = Participante.objects.all()
+            
+            # Obtenemos los filtros del formulario
+            textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
+            fecha_inscripcion_desde = formulario.cleaned_data.get('fecha_inscripcion_desde')
+            fecha_inscripcion_hasta = formulario.cleaned_data.get('fecha_inscripcion_hasta')
+            puntos_minimos = formulario.cleaned_data.get('puntos_minimos')
+            puntos_maximos = formulario.cleaned_data.get('puntos_maximos')
+            tiempo_jugado_minimo = formulario.cleaned_data.get('tiempo_jugado_minimo')
+            tiempo_jugado_maximo = formulario.cleaned_data.get('tiempo_jugado_maximo')
+            
+            # Aplicamos los filtros según corresponda
+            if textoBusqueda:
+                QSparticipantes = QSparticipantes.filter(Q(usuario__nombre__icontains=textoBusqueda))
+                mensaje_busqueda += f" Nombre del participante que contenga la palabra '{textoBusqueda}'\n"
+            
+            if fecha_inscripcion_desde:
+                QSparticipantes = QSparticipantes.filter(fecha_inscripcion__gte=fecha_inscripcion_desde)
+                mensaje_busqueda += f" Fecha de inscripción desde: {fecha_inscripcion_desde.strftime('%d-%m-%Y')}\n"
+            
+            if fecha_inscripcion_hasta:
+                QSparticipantes = QSparticipantes.filter(fecha_inscripcion__lte=fecha_inscripcion_hasta)
+                mensaje_busqueda += f" Fecha de inscripción hasta: {fecha_inscripcion_hasta.strftime('%d-%m-%Y')}\n"
+            
+            if puntos_minimos is not None:
+                QSparticipantes = QSparticipantes.filter(puntos_obtenidos__gte=puntos_minimos)
+                mensaje_busqueda += f" Puntos obtenidos mínimos: {puntos_minimos}\n"
+            
+            if puntos_maximos is not None:
+                QSparticipantes = QSparticipantes.filter(puntos_obtenidos__lte=puntos_maximos)
+                mensaje_busqueda += f" Puntos obtenidos máximos: {puntos_maximos}\n"
+            
+            if tiempo_jugado_minimo is not None:
+                QSparticipantes = QSparticipantes.filter(tiempo_jugado__gte=tiempo_jugado_minimo)
+                mensaje_busqueda += f" Tiempo jugado mínimo: {tiempo_jugado_minimo} horas\n"
+            
+            if tiempo_jugado_maximo is not None:
+                QSparticipantes = QSparticipantes.filter(tiempo_jugado__lte=tiempo_jugado_maximo)
+                mensaje_busqueda += f" Tiempo jugado máximo: {tiempo_jugado_maximo} horas\n"
+            
+            # Ejecutamos la consulta
+            participantes = QSparticipantes.all()
+    
+            return render(request, 'torneo/crearparticipante/buscar_participante.html', {
+                "participantes_mostrar": participantes,
+                "texto_busqueda": mensaje_busqueda
+            })
+    else:
+        formulario = BusquedaAvanzadaParticipanteForm(None)
+    
+    return render(request, 'torneo/crearparticipante/busqueda_avanzada.html', {"formulario": formulario})
+
+
+
+def lista_participantes(request):
+    # Recuperar todos los participantes desde la base de datos
+    participantes = Participante.objects.all()
+
+    # Pasar la lista de participantes a la plantilla
+    return render(request, 'torneo/lista_participantes.html', {
+        'participantes': participantes
+    })
+
+def participante_editar(request, participante_id):
+    # Obtenemos el participante correspondiente al ID proporcionado
+    participante = Participante.objects.get(id=participante_id)
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del participante actual
+    formulario = ParticipanteForm(datosFormulario, instance=participante)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el participante '{formulario.cleaned_data.get('usuario.nombre')}' correctamente."
+                )
+                return redirect('lista_participantes')  # Redirigimos a la lista de participantes
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/crearparticipante/crear_participante.html',  # Cambia la ruta de la plantilla según la estructura de tu proyecto
+        {"formulario": formulario, "participante": participante}
+    )
+
+def participante_eliminar(request, participante_id):
+    participante = Participante.objects.get(id=participante_id)  # Obtenemos el participante al igual que el equipo
+    try:
+        participante.delete()  # Eliminamos el participante
+        messages.success(request, "Se ha eliminado el participante " + participante.usuario.nombre + " correctamente")
+    except Exception as error:
+        print(error)  # Si ocurre un error, lo mostramos en la consola
+    return redirect('lista_participantes')  # Redirigimos a la lista de participantes
+
+
+
+def crear_usuario(request):
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario
+    formulario = UsuarioForm(datosFormulario)
+
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos el usuario en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(request, "El usuario ha sido creado correctamente.")
+                return redirect("lista_usuarios")  # Redirigimos a la lista de usuarios
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+
+    return render(request, 'torneo/crearusuario/crear_usuario.html', {'formulario': formulario})
+
+
+
+
+
+def usuario_buscar_avanzado(request):
+    if len(request.GET) > 0:
+        formulario = BusquedaUsuarioForm(request.GET)
+        if formulario.is_valid():
+            
+            mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
+            
+            QSusarios = Usuario.objects.all()
+            
+            # Obtenemos los filtros del formulario
+            textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
+            fecha_registro_desde = formulario.cleaned_data.get('fecha_registro_desde')
+            fecha_registro_hasta = formulario.cleaned_data.get('fecha_registro_hasta')
+            
+            # Aplicamos los filtros según corresponda
+            if textoBusqueda:
+                QSusarios = QSusarios.filter(Q(nombre__icontains=textoBusqueda) | Q(correo__icontains=textoBusqueda))
+                mensaje_busqueda += f" Nombre o correo que contenga la palabra '{textoBusqueda}'\n"
+            
+            if fecha_registro_desde:
+                QSusarios = QSusarios.filter(fecha_registro__gte=fecha_registro_desde)
+                mensaje_busqueda += f" Fecha de registro desde: {fecha_registro_desde.strftime('%d-%m-%Y')}\n"
+            
+            if fecha_registro_hasta:
+                QSusarios = QSusarios.filter(fecha_registro__lte=fecha_registro_hasta)
+                mensaje_busqueda += f" Fecha de registro hasta: {fecha_registro_hasta.strftime('%d-%m-%Y')}\n"
+            
+            # Ejecutamos la consulta
+            usuarios = QSusarios.all()
+
+            if not usuarios.exists():
+                messages.info(request, 'No se encontraron usuarios con los filtros aplicados.')
+
+            return render(request, 'torneo/crearusuario/buscar_usuario.html', {
+                "usuarios_mostrar": usuarios,
+                "texto_busqueda": mensaje_busqueda
+            })
+    else:
+        formulario = BusquedaUsuarioForm(None)
+    
+    return render(request, 'torneo/crearusuario/busqueda_avanzada.html', {"formulario": formulario})
+
+
+def lista_usuarios(request):
+    # Obtener todos los usuarios de la base de datos
+    usuarios = Usuario.objects.all()
+    
+    # Pasar los usuarios a la plantilla para su visualización
+    return render(request, 'torneo/lista_usuarios.html', {
+        'usuarios': usuarios
+    })
+
+
+def usuario_editar(request, usuario_id):
+    # Obtenemos el usuario correspondiente al ID proporcionado
+    usuario = Usuario.objects.get(id=usuario_id)
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del usuario actual
+    formulario = UsuarioForm(datosFormulario, instance=usuario)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el usuario '{formulario.cleaned_data.get('nombre')}' correctamente."
+                )
+                return redirect('lista_usuarios')  # Redirigimos a la lista de usuarios
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/crearusuario/crear_usuario.html',  # Asegúrate de tener la plantilla adecuada para editar el usuario
+        {"formulario": formulario, "usuario": usuario}
+    )
+
+def usuario_eliminar(request, usuario_id):
+    try:
+        # Obtenemos el usuario al igual que el participante
+        usuario = Usuario.objects.get(id=usuario_id)
+        
+        # Eliminamos el usuario
+        usuario.delete()
+        
+        # Mostramos un mensaje de éxito
+        messages.success(request, f"Se ha eliminado el usuario {usuario.nombre} correctamente.")
+        
+    except Usuario.DoesNotExist:
+        # Si el usuario no existe, mostramos un mensaje de error
+        messages.error(request, "El usuario no existe.")
+    except Exception as error:
+        # Si ocurre otro error, lo mostramos en la consola
+        print(error)
+    
+    # Redirigimos a la lista de usuarios
+    return redirect('lista_usuarios')
+
+
+
+
+
+# Vista para crear un nuevo juego
+def crear_juego(request):
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario con los datos recibidos
+    formulario = JuegoForm(datosFormulario)
+
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos el juego en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(request, "El juego ha sido creado correctamente.")
+                return redirect("lista_juegos")  # Redirigimos a la lista de juegos
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+
+    return render(request, 'torneo/crearjuego/crear_juego.html', {'formulario': formulario})
+
+
+
+
+
 #Distintos errores de las paginas web
 def mi_error_404(request, exception=None):
     return render(request, 'torneo/errores/404.html', None,None,404)

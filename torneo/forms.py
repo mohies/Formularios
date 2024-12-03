@@ -236,16 +236,18 @@ class BusquedaAvanzadaEquipoForm(forms.Form):
 
     def clean(self):
         # Misma lógica de validación que antes
-        cleaned_data = super().clean()
+        super().clean()
 
-        textoBusqueda = cleaned_data.get('textoBusqueda')
-        fecha_ingreso_desde = cleaned_data.get('fecha_ingreso_desde')
-        fecha_ingreso_hasta = cleaned_data.get('fecha_ingreso_hasta')
-        puntos_minimos = cleaned_data.get('puntos_minimos')
-        puntos_maximos = cleaned_data.get('puntos_maximos')
+        textoBusqueda = self.cleaned_data.get('textoBusqueda')
+        fecha_ingreso_desde = self.cleaned_data.get('fecha_ingreso_desde')
+        fecha_ingreso_hasta = self.cleaned_data.get('fecha_ingreso_hasta')
+        puntos_minimos = self.cleaned_data.get('puntos_minimos')
+        puntos_maximos = self.cleaned_data.get('puntos_maximos')
 
-        if not (textoBusqueda or fecha_ingreso_desde or fecha_ingreso_hasta or puntos_minimos or puntos_maximos):
-            self.add_error(None, 'Debe introducir al menos un valor en un campo del formulario')
+        if not (textoBusqueda and fecha_ingreso_desde and fecha_ingreso_hasta and puntos_minimos and puntos_maximos):
+            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_ingreso_desde', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_ingreso_hasta', 'Debe introducir al menos un valor en un campo del formulario')
 
         if textoBusqueda and len(textoBusqueda) < 3:
             self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
@@ -257,7 +259,7 @@ class BusquedaAvanzadaEquipoForm(forms.Form):
             if puntos_minimos > puntos_maximos:
                 self.add_error('puntos_minimos', 'Los puntos mínimos no pueden ser mayores que los puntos máximos')
                 self.add_error('puntos_maximos', 'Los puntos máximos no pueden ser menores que los puntos mínimos')
-        return cleaned_data
+        return self.cleaned_data
 
 
 
@@ -322,6 +324,215 @@ class ParticipanteForm(forms.ModelForm):
 
         # Siempre devolvemos el conjunto de datos
         return self.cleaned_data
+    
+    
+class BusquedaParticipanteForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False)
+
+class BusquedaAvanzadaParticipanteForm(forms.Form):
+    textoBusqueda = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del participante'}),
+        label="Nombre del Participante"
+    )
+    fecha_inscripcion_desde = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de inscripción desde"
+    )
+    fecha_inscripcion_hasta = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de inscripción hasta"
+    )
+    puntos_minimos = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Puntos mínimos"
+    )
+    puntos_maximos = forms.IntegerField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Puntos máximos"
+    )
+    tiempo_jugado_minimo = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Tiempo jugado mínimo (en horas)"
+    )
+    tiempo_jugado_maximo = forms.FloatField(
+        required=False,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label="Tiempo jugado máximo (en horas)"
+    )
+
+    def clean(self):
+        super().clean()
+
+        textoBusqueda = self.cleaned_data.get('textoBusqueda')
+        fecha_inscripcion_desde = self.cleaned_data.get('fecha_inscripcion_desde')
+        fecha_inscripcion_hasta = self.cleaned_data.get('fecha_inscripcion_hasta')
+        puntos_minimos = self.cleaned_data.get('puntos_minimos')
+        puntos_maximos = self.cleaned_data.get('puntos_maximos')
+        tiempo_jugado_minimo = self.cleaned_data.get('tiempo_jugado_minimo')
+        tiempo_jugado_maximo = self.cleaned_data.get('tiempo_jugado_maximo')
+
+        # Validación: Al menos un campo debe estar lleno
+        if not (textoBusqueda or fecha_inscripcion_desde or fecha_inscripcion_hasta or puntos_minimos or puntos_maximos or tiempo_jugado_minimo or tiempo_jugado_maximo):
+            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_inscripcion_desde', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_inscripcion_hasta', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('puntos_minimos', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('puntos_maximos', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('tiempo_jugado_minimo', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('tiempo_jugado_maximo', 'Debe introducir al menos un valor en un campo del formulario')
+
+        # Validación: La fecha "hasta" no puede ser menor que la fecha "desde"
+        if fecha_inscripcion_desde and fecha_inscripcion_hasta and fecha_inscripcion_hasta < fecha_inscripcion_desde:
+            self.add_error('fecha_inscripcion_hasta', 'La fecha "hasta" no puede ser anterior a la fecha "desde"')
+
+        # Validación: Los puntos mínimos no pueden ser mayores que los máximos
+        if puntos_minimos is not None and puntos_maximos is not None and puntos_minimos > puntos_maximos:
+            self.add_error('puntos_minimos', 'Los puntos mínimos no pueden ser mayores que los puntos máximos')
+            self.add_error('puntos_maximos', 'Los puntos máximos no pueden ser menores que los puntos mínimos')
+
+        # Validación: El tiempo jugado mínimo no puede ser mayor que el máximo
+        if tiempo_jugado_minimo is not None and tiempo_jugado_maximo is not None and tiempo_jugado_minimo > tiempo_jugado_maximo:
+            self.add_error('tiempo_jugado_minimo', 'El tiempo jugado mínimo no puede ser mayor que el tiempo jugado máximo')
+            self.add_error('tiempo_jugado_maximo', 'El tiempo jugado máximo no puede ser menor que el tiempo jugado mínimo')
+
+        return self.cleaned_data
+    
+
+class UsuarioForm(forms.ModelForm):
+    class Meta:
+        model = Usuario  # Modelo asociado al formulario
+        fields = ['nombre', 'correo', 'clave_de_acceso', 'fecha_registro']  # Campos a incluir en el formulario
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'correo': forms.EmailInput(attrs={'class': 'form-control'}),
+            'clave_de_acceso': forms.PasswordInput(attrs={'class': 'form-control'}),
+            'fecha_registro': forms.DateTimeInput(attrs={'type': 'datetime-local', 'class': 'form-control'}),
+        }
+        labels = {
+            'nombre': "Nombre del Usuario",
+            'correo': "Correo Electrónico",
+            'clave_de_acceso': "Clave de Acceso",
+            'fecha_registro': "Fecha de Registro",
+        }
+        help_texts = {
+            'nombre': "Nombre completo del usuario",
+            'correo': "Correo electrónico único para el usuario",
+            'clave_de_acceso': "Una clave segura para acceder al sistema",
+            'fecha_registro': "Fecha y hora en que se registró el usuario",
+        }
+
+    def clean(self):
+        # Validamos con el modelo actual
+        super().clean()
+
+        # Obtenemos los campos
+        correo = self.cleaned_data.get('correo')
+        clave_de_acceso = self.cleaned_data.get('clave_de_acceso')
+
+        # Comprobamos si el correo ya está registrado
+        usuario_existente = Usuario.objects.filter(correo=correo).first()
+        if usuario_existente:
+            if self.instance and usuario_existente.id == self.instance.id:
+                pass
+            else:
+                self.add_error('correo', 'Ya existe un usuario con ese correo electrónico.')
+
+        # Comprobamos que la clave de acceso tenga al menos 8 caracteres
+        if clave_de_acceso and len(clave_de_acceso) < 8:
+            self.add_error('clave_de_acceso', 'La clave de acceso debe tener al menos 8 caracteres.')
+
+        # Siempre devolvemos el conjunto de datos
+        return self.cleaned_data
+    
+    
+
+class BusquedaUsuarioForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre o correo del usuario'}), label="Nombre o Correo del Usuario")
+
+    fecha_registro_desde = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de registro desde"
+    )
+    fecha_registro_hasta = forms.DateField(
+        required=False,
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Fecha de registro hasta"
+    )
+
+    def clean(self):
+        super().clean()
+
+        textoBusqueda = self.cleaned_data.get('textoBusqueda')
+        fecha_registro_desde = self.cleaned_data.get('fecha_registro_desde')
+        fecha_registro_hasta = self.cleaned_data.get('fecha_registro_hasta')
+
+        # Validación: Al menos un campo debe estar lleno
+        if not (textoBusqueda or fecha_registro_desde or fecha_registro_hasta):
+            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_registro_desde', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_registro_hasta', 'Debe introducir al menos un valor en un campo del formulario')
+
+        # Validación: La fecha "hasta" no puede ser menor que la fecha "desde"
+        if fecha_registro_desde and fecha_registro_hasta and fecha_registro_hasta < fecha_registro_desde:
+            self.add_error('fecha_registro_hasta', 'La fecha "hasta" no puede ser anterior a la fecha "desde"')
+
+        return self.cleaned_data
+    
+    
+    
+class JuegoForm(forms.ModelForm):
+    class Meta:
+        model = Juego  # Modelo asociado al formulario
+        fields = ['nombre', 'genero', 'id_consola', 'descripcion', 'torneo']  # Campos a incluir en el formulario
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'genero': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
+            'torneo': forms.Select(attrs={'class': 'form-control'}),
+            'id_consola': forms.Select(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'nombre': "Nombre del Juego",
+            'genero': "Género del Juego",
+            'descripcion': "Descripción del Juego",
+            'torneo': "Torneo Asociado",
+            'id_consola': "Consola",
+        }
+        help_texts = {
+            'nombre': "Nombre del juego",
+            'genero': "Género del juego (acción, aventura, etc.)",
+            'descripcion': "Descripción breve del juego",
+            'torneo': "Torneo al que está asociado el juego",
+            'id_consola': "Consola en la que se juega",
+        }
+
+    def clean(self):
+        # Validamos con el modelo actual
+        super().clean()
+
+        # Obtenemos los campos
+        nombre = self.cleaned_data.get('nombre')
+
+        # Comprobamos si el nombre del juego ya está registrado
+        juego_existente = Juego.objects.filter(nombre=nombre).first()
+        if juego_existente:
+            if self.instance and juego_existente.id == self.instance.id:
+                pass
+            else:
+                self.add_error('nombre', 'Ya existe un juego con ese nombre.')
+
+        # Siempre devolvemos el conjunto de datos
+        return self.cleaned_data
+
+
+
 
 
 

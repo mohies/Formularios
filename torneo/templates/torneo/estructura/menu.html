@@ -44,8 +44,38 @@
                 </a>
                 <ul class="dropdown-menu" aria-labelledby="dropdownFormularios">
                     <li><a class="dropdown-item" href="{% url 'crear_participante' %}">Crear Participante</a></li>
+                    <li><a class="dropdown-item" href="{% url 'buscar_participante' %}">Buscar Participante</a></li>
+                    <li><a class="dropdown-item" href="{% url 'lista_participantes' %}">Lista Participantes</a></li>
                 </ul>
             </li>
+
+            <!-- Dropdown de Usuarios -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdownFormularios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Usuarios
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownFormularios">
+                    <li><a class="dropdown-item" href="{% url 'crear_usuario' %}">Crear Usuario</a></li>
+                    <li><a class="dropdown-item" href="{% url 'buscar_usuario' %}">Buscar Usuario</a></li>
+                    <li><a class="dropdown-item" href="{% url 'lista_usuarios' %}">Lista Usuarios</a></li>
+                    
+                </ul>
+            </li>
+
+
+
+               <!-- Dropdown de Juegos -->
+               <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdownFormularios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Juegos
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownFormularios">
+                    <li><a class="dropdown-item" href="{% url 'crear_juego' %}">Crear Juego</a></li>
+                </ul>
+            </li>
+
+
+
 
 
 

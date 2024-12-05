@@ -35,8 +35,8 @@
             <label for="{{ formulario.descripcion.id_for_label }}" class="form-label">{{ formulario.descripcion.label }}: </label>
             <textarea name="{{ formulario.descripcion.html_name }}" 
                     class="form-control {% if formulario.descripcion.errors %} is-invalid{% elif formulario.is_bound %} is-valid{% endif %}" 
-                    id="{{ formulario.descripcion.id_for_label }}"
-                    >{% if formulario.is_bound %}{{ formulario.descripcion.value }}{% endif %}</textarea>
+                    id="{{ formulario.descripcion.id_for_label }}">
+                    {% if formulario.is_bound %}{{ formulario.descripcion.value }}{% endif %}</textarea>
             <div class="invalid-feedback">
                 {% for error in formulario.descripcion.errors %} 
                     {{ error }}
@@ -68,11 +68,12 @@
             <label for="{{ formulario.categoria.id_for_label }}" class="form-label">
                 {{ formulario.categoria.label }}
             </label>
-            {{ formulario.categoria }}
+            {{ formulario.categoria }}  <!-- Renderiza el campo select -->
             <div class="form-text">
                 {{ formulario.categoria.help_text }}
             </div>
         </div>
+        
 
         <!-- Campo Participantes -->
         <div class="mb-3">
@@ -106,11 +107,22 @@
             <label for="{{ formulario.duracion.id_for_label }}" class="form-label">
                 {{ formulario.duracion.label }}
             </label>
-            {{ formulario.duracion }}
+            {{ formulario.duracion }} <!-- Renderiza el campo select -->
+            
+            <!-- Mostrar los errores si existen -->
+            {% if formulario.duracion.errors %}
+                <div class="alert alert-danger">
+                    {% for error in formulario.duracion.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
             <div class="form-text">
                 {{ formulario.duracion.help_text }}
             </div>
         </div>
+        
+        
 
         <!-- Botón Enviar -->
         <button type="submit" class="btn btn-primary w-100 mt-3">Crear Torneo</button>

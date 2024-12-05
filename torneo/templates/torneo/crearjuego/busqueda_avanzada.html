@@ -1,0 +1,37 @@
+{% extends "torneo/estructura/base.html" %}
+
+{% block content %}
+{% load django_bootstrap5 %}
+
+<form action="{% url 'buscar_juego' %}" method="GET">
+
+    {% csrf_token %}
+
+    <!-- Campo de texto para búsqueda -->
+    <div class="mb-4">
+        {% bootstrap_field formulario.nombre show_label=True %}
+    </div>
+
+    <!-- Campo de género -->
+    <div class="mb-4">
+        {% bootstrap_field formulario.genero show_label=True %}
+    </div>
+
+    <!-- Campo de fecha de creación desde -->
+    <div class="mb-4">
+        {% bootstrap_field formulario.fecha_creacion_desde show_label=True %}
+    </div>
+
+    <!-- Campo de fecha de creación hasta -->
+    <div class="mb-4">
+        {% bootstrap_field formulario.fecha_creacion_hasta show_label=True %}
+    </div>
+
+    <!-- Botón de búsqueda -->
+    <div class="text-center">
+        {% bootstrap_button "Buscar Juegos" button_type="submit" button_class="btn-primary" %}
+    </div>
+
+</form>
+
+{% endblock %}

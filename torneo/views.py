@@ -564,6 +564,120 @@ def crear_juego(request):
 
 
 
+def lista_juegos(request):
+    # Obtener todos los juegos de la base de datos
+    juegos = Juego.objects.all()
+    
+    # Renderizar la plantilla y pasar los juegos como contexto
+    return render(request, 'torneo/lista_juegos.html', {'juegos': juegos})
+
+
+def juego_buscar_avanzado(request):
+    if len(request.GET) > 0:
+        formulario = BusquedaJuegoForm(request.GET)
+        if formulario.is_valid():
+            
+            mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
+            
+            QJuegos = Juego.objects.all()
+            
+            # Obtenemos los filtros del formulario
+            nombre = formulario.cleaned_data.get('nombre')
+            genero = formulario.cleaned_data.get('genero')
+            fecha_creacion_desde = formulario.cleaned_data.get('fecha_creacion_desde')
+            fecha_creacion_hasta = formulario.cleaned_data.get('fecha_creacion_hasta')
+            
+            # Aplicamos los filtros según corresponda
+            if nombre:
+                QJuegos = QJuegos.filter(nombre__icontains=nombre)
+                mensaje_busqueda += f" Nombre que contenga la palabra '{nombre}'\n"
+            
+            if genero:
+                QJuegos = QJuegos.filter(genero__icontains=genero)
+                mensaje_busqueda += f" Género que contenga la palabra '{genero}'\n"
+            
+            if fecha_creacion_desde:
+                QJuegos = QJuegos.filter(fecha_creacion__gte=fecha_creacion_desde)
+                mensaje_busqueda += f" Fecha de creación desde: {fecha_creacion_desde.strftime('%d-%m-%Y')}\n"
+            
+            if fecha_creacion_hasta:
+                QJuegos = QJuegos.filter(fecha_creacion__lte=fecha_creacion_hasta)
+                mensaje_busqueda += f" Fecha de creación hasta: {fecha_creacion_hasta.strftime('%d-%m-%Y')}\n"
+            
+            # Ejecutamos la consulta
+            juegos = QJuegos.all()
+
+            if not juegos.exists():
+                messages.info(request, 'No se encontraron juegos con los filtros aplicados.')
+
+            return render(request, 'torneo/crearjuego/buscar_juego.html', {
+                "juegos_mostrar": juegos,
+                "texto_busqueda": mensaje_busqueda
+            })
+    else:
+        formulario = BusquedaJuegoForm(None)
+    
+    return render(request, 'torneo/crearjuego/busqueda_avanzada.html', {"formulario": formulario})
+
+
+
+def juego_editar(request, juego_id):
+    # Obtenemos el juego correspondiente al ID proporcionado
+    juego = Juego.objects.get(id=juego_id)  # Usamos get directamente sin 404
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del juego actual
+    formulario = JuegoForm(datosFormulario, instance=juego)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el juego '{formulario.cleaned_data.get('nombre')}' correctamente."
+                )
+                return redirect('lista_juegos')  # Redirigimos a la lista de juegos
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/crearjuego/crear_juego.html',  # Asegúrate de tener la plantilla adecuada para editar el juego
+        {"formulario": formulario, "juego": juego}
+    )
+
+
+def juego_eliminar(request, juego_id):
+    try:
+        # Obtenemos el juego correspondiente al ID proporcionado
+        juego = Juego.objects.get(id=juego_id)
+        
+        # Eliminamos el juego
+        juego.delete()
+        
+        # Mostramos un mensaje de éxito
+        messages.success(request, f"Se ha eliminado el juego {juego.nombre} correctamente.")
+        
+    except Juego.DoesNotExist:
+        # Si el juego no existe, mostramos un mensaje de error
+        messages.error(request, "El juego no existe.")
+    except Exception as error:
+        # Si ocurre otro error, lo mostramos en la consola
+        print(error)
+    
+    # Redirigimos a la lista de juegos
+    return redirect('lista_juegos')
+
+
+
 
 
 #Distintos errores de las paginas web

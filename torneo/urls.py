@@ -24,5 +24,9 @@ urlpatterns = [
     path('editar_usuario/<int:usuario_id>/', views.usuario_editar, name='usuario_editar'),
     path('usuario/eliminar/<int:usuario_id>/', views.usuario_eliminar, name='usuario_eliminar'),
     path('crearjuego/', views.crear_juego, name='crear_juego'),
+    path('juegos/', views.lista_juegos, name='lista_juegos'),
+    path('buscar-juego/', views.juego_buscar_avanzado, name='buscar_juego'),
+    path('juego/editar/<int:juego_id>/', views.juego_editar, name='juego_editar'),
+    path('juego/eliminar/<int:juego_id>/', views.juego_eliminar, name='juego_eliminar'),
 
 ]

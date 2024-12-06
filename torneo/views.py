@@ -677,6 +677,146 @@ def juego_eliminar(request, juego_id):
     return redirect('lista_juegos')
 
 
+def crear_perfil_de_jugador(request):
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario
+    formulario = PerfilDeJugadorForm(datosFormulario)
+
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos el perfil de jugador en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(request, "El perfil de jugador ha sido creado correctamente.")
+                return redirect("lista_perfiles_de_jugadores")  # Redirigimos a la lista de perfiles de jugadores
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+
+    return render(request, 'torneo/crearperfil/crear_perfil_de_jugador.html', {'formulario': formulario})
+
+def perfil_buscar_avanzado(request):
+    if len(request.GET) > 0:
+        formulario = BusquedaAvanzadaPerfilJugadorForm(request.GET)
+        if formulario.is_valid():
+            
+            mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
+            
+            QPerfiles = PerfilDeJugador.objects.all()
+            
+            # Obtenemos los filtros del formulario
+            textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
+            puntos_minimos = formulario.cleaned_data.get('puntos_minimos')
+            nivel_minimo = formulario.cleaned_data.get('nivel_minimo')
+            fecha_desde = formulario.cleaned_data.get('fecha_desde')
+            fecha_hasta = formulario.cleaned_data.get('fecha_hasta')
+            
+            # Aplicamos los filtros según corresponda
+            if textoBusqueda:
+                QPerfiles = QPerfiles.filter(usuario__nombre__icontains=textoBusqueda)
+                mensaje_busqueda += f" Nombre que contenga la palabra '{textoBusqueda}'\n"
+            
+            if puntos_minimos is not None:
+                QPerfiles = QPerfiles.filter(puntos__gte=puntos_minimos)
+                mensaje_busqueda += f" Puntos mayores o iguales a {puntos_minimos}\n"
+            
+            if nivel_minimo is not None:
+                QPerfiles = QPerfiles.filter(nivel__gte=nivel_minimo)
+                mensaje_busqueda += f" Nivel mayor o igual a {nivel_minimo}\n"
+            
+            if fecha_desde:
+                QPerfiles = QPerfiles.filter(fecha_creacion__gte=fecha_desde)
+                mensaje_busqueda += f" Fecha de creación desde: {fecha_desde.strftime('%d-%m-%Y')}\n"
+            
+            if fecha_hasta:
+                QPerfiles = QPerfiles.filter(fecha_creacion__lte=fecha_hasta)
+                mensaje_busqueda += f" Fecha de creación hasta: {fecha_hasta.strftime('%d-%m-%Y')}\n"
+            
+            # Ejecutamos la consulta
+            perfiles = QPerfiles.all()
+
+            if not perfiles.exists():
+                messages.info(request, 'No se encontraron perfiles con los filtros aplicados.')
+
+            return render(request, 'torneo/crearperfil/buscar_perfil.html', {
+                "perfiles_mostrar": perfiles,
+                "texto_busqueda": mensaje_busqueda
+            })
+    else:
+        formulario = BusquedaAvanzadaPerfilJugadorForm(None)
+    
+    return render(request, 'torneo/crearperfil/busqueda_avanzada.html', {"formulario": formulario})
+
+
+
+def lista_perfiles(request):
+    # Obtener todos los perfiles de jugadores de la base de datos
+    perfiles = PerfilDeJugador.objects.all()
+    
+    # Renderizar la plantilla y pasar los perfiles como contexto
+    return render(request, 'torneo/lista_perfiles.html', {'perfiles': perfiles})
+
+
+
+def perfil_editar(request, perfil_id):
+    # Obtenemos el perfil de jugador correspondiente al ID proporcionado
+    perfil = PerfilDeJugador.objects.get(id=perfil_id)  # Usamos get directamente sin 404
+    
+    datosFormulario = None  # Inicializamos la variable para los datos del formulario
+
+    if request.method == "POST":
+        datosFormulario = request.POST  # Capturamos los datos enviados por el formulario
+    
+    # Creamos el formulario usando la instancia del perfil de jugador actual
+    formulario = PerfilDeJugadorForm(datosFormulario, instance=perfil)
+    
+    if request.method == "POST":
+        if formulario.is_valid():  # Validamos el formulario
+            try:
+                # Guardamos los cambios en la base de datos
+                formulario.save()
+                # Mostramos un mensaje de éxito
+                messages.success(
+                    request,
+                    f"Se ha editado el perfil de '{formulario.cleaned_data.get('usuario')}' correctamente."
+                )
+                return redirect('lista_perfiles')  # Redirigimos a la lista de perfiles
+            except Exception as error:
+                print(error)  # Imprimimos el error en la consola para depuración
+    
+    # Renderizamos el formulario de edición
+    return render(
+        request,
+        'torneo/crearperfil/crear_perfil_de_jugador.html',  # Asegúrate de tener la plantilla adecuada para editar el perfil
+        {"formulario": formulario, "perfil": perfil}
+    )
+
+def perfil_eliminar(request, perfil_id):
+    try:
+        # Obtenemos el perfil correspondiente al ID proporcionado
+        perfil = PerfilDeJugador.objects.get(id=perfil_id)
+        
+        # Eliminamos el perfil
+        perfil.delete()
+        
+        # Mostramos un mensaje de éxito
+        messages.success(request, f"Se ha eliminado el perfil de jugador {perfil.usuario.username} correctamente.")
+        
+    except PerfilDeJugador.DoesNotExist:
+        # Si el perfil no existe, mostramos un mensaje de error
+        messages.error(request, "El perfil de jugador no existe.")
+    except Exception as error:
+        # Si ocurre otro error, lo mostramos en la consola
+        print(error)
+    
+    # Redirigimos a la lista de perfiles
+    return redirect('lista_perfiles')  # Asegúrate de tener configurada esta URL
+
+
 
 
 

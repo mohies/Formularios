@@ -28,5 +28,12 @@ urlpatterns = [
     path('buscar-juego/', views.juego_buscar_avanzado, name='buscar_juego'),
     path('juego/editar/<int:juego_id>/', views.juego_editar, name='juego_editar'),
     path('juego/eliminar/<int:juego_id>/', views.juego_eliminar, name='juego_eliminar'),
+    path('crear_perfil_de_jugador/', views.crear_perfil_de_jugador, name='crear_perfil_de_jugador'),
+    path('perfiles/', views.lista_perfiles, name='lista_perfiles'),
+    path('buscar-perfil/', views.perfil_buscar_avanzado, name='buscar_perfil'),
+    path('perfil/editar/<int:perfil_id>/', views.perfil_editar, name='editar_perfil'),
+    path('perfil/eliminar/<int:perfil_id>/', views.perfil_eliminar, name='eliminar_perfil'),
+
+
 
 ]

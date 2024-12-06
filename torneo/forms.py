@@ -597,6 +597,140 @@ class BusquedaJuegoForm(forms.Form):
             self.add_error('fecha_creacion_hasta', 'La fecha "hasta" no puede ser anterior a la fecha "desde"')
 
         return self.cleaned_data
+    
+    
+class PerfilDeJugadorForm(forms.ModelForm):
+    class Meta:
+        model = PerfilDeJugador
+        fields = ['usuario', 'puntos', 'nivel', 'ranking', 'avatar']
+        widgets = {
+            'usuario': forms.Select(attrs={'class': 'form-control'}),
+            'puntos': forms.NumberInput(attrs={'class': 'form-control'}),
+            'nivel': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ranking': forms.NumberInput(attrs={'class': 'form-control'}),
+            'avatar': forms.URLInput(attrs={'class': 'form-control'}),
+        }
+        labels = {
+            'usuario': "Usuario",
+            'puntos': "Puntos",
+            'nivel': "Nivel",
+            'ranking': "Ranking",
+            'avatar': "Avatar (URL)",
+        }
+        help_texts = {
+            'usuario': "Selecciona el usuario del jugador.",
+            'puntos': "Puntos acumulados por el jugador.",
+            'nivel': "Nivel del jugador.",
+            'ranking': "Ranking del jugador.",
+            'avatar': "URL de la imagen del avatar del jugador.",
+        }
+
+    def clean(self):
+        # Llamamos al método clean() de la clase base
+        super().clean()
+
+        # Obtenemos los campos
+        usuario = self.cleaned_data.get('usuario')
+        puntos = self.cleaned_data.get('puntos')
+        nivel = self.cleaned_data.get('nivel')
+        ranking = self.cleaned_data.get('ranking')
+        avatar = self.cleaned_data.get('avatar')
+
+        # Validar que el usuario no esté vacío ni solo contenga espacios
+        if not usuario:
+            self.add_error('usuario', 'El usuario es obligatorio.')
+
+        # Validación de unicidad del usuario
+        perfil_existente = PerfilDeJugador.objects.filter(usuario=usuario).first()
+        if perfil_existente:
+            if self.instance and perfil_existente.id == self.instance.id:
+                pass
+            else:
+                self.add_error('usuario', 'Este usuario ya tiene un perfil de jugador.')
+
+        # Validar que los puntos, nivel y ranking sean valores positivos
+        if puntos is not None and puntos < 0:
+            self.add_error('puntos', 'Los puntos deben ser un valor positivo.')
+        if nivel is not None and nivel < 0:
+            self.add_error('nivel', 'El nivel debe ser un valor positivo.')
+        if ranking is not None and ranking < 0:
+            self.add_error('ranking', 'El ranking debe ser un valor positivo.')
+
+        # Validar que el avatar sea una URL válida
+        if avatar and not avatar.startswith(('http://', 'https://')):
+            self.add_error('avatar', 'El avatar debe ser una URL válida.')
+
+        # Siempre devolvemos el conjunto de datos limpios
+        return self.cleaned_data
+    
+    
+class BusquedaPerfilJugadorForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False)
+
+class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
+    textoBusqueda = forms.CharField(required=False)
+    
+    # Campo para filtrar por puntos
+    puntos_minimos = forms.IntegerField(
+        label="Puntos Mínimos", 
+        required=False, 
+        widget=forms.NumberInput(attrs={'placeholder': 'Introduce los puntos mínimos'})
+    )
+
+    nivel_minimo = forms.IntegerField(
+        label="Nivel Mínimo", 
+        required=False, 
+        widget=forms.NumberInput(attrs={'placeholder': 'Introduce el nivel mínimo'})
+    )
+
+    # Fecha de creación del perfil (si la tienes en el modelo)
+    fecha_desde = forms.DateField(
+        label="Fecha Desde", 
+        required=False, 
+        widget=DateInput(attrs={"type": "date", "class": "form-control"})
+    )
+
+    fecha_hasta = forms.DateField(
+        label="Fecha Hasta", 
+        required=False, 
+        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"})
+    )
+
+    def clean(self):
+        super().clean()
+
+        # Obtenemos los campos
+        textoBusqueda = self.cleaned_data.get('textoBusqueda')
+        puntos_minimos = self.cleaned_data.get('puntos_minimos')
+        nivel_minimo = self.cleaned_data.get('nivel_minimo')
+        fecha_desde = self.cleaned_data.get('fecha_desde')
+        fecha_hasta = self.cleaned_data.get('fecha_hasta')
+
+        # Validar que al menos uno de los campos tenga un valor
+        if textoBusqueda == "" and puntos_minimos is None and nivel_minimo is None and fecha_desde is None and fecha_hasta is None:
+            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('puntos_minimos', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('nivel_minimo', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_desde', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('fecha_hasta', 'Debe introducir al menos un valor en un campo del formulario')
+
+        # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
+        if textoBusqueda != "" and len(textoBusqueda) < 3:
+            self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
+
+        # La fecha hasta debe ser mayor o igual a la fecha desde
+        if fecha_desde and fecha_hasta and fecha_hasta < fecha_desde:
+            self.add_error('fecha_desde', 'La fecha hasta no puede ser menor que la fecha desde')
+            self.add_error('fecha_hasta', 'La fecha hasta no puede ser menor que la fecha desde')
+
+        # Validar que los puntos y el nivel sean mayores a cero si se ingresan
+        if puntos_minimos is not None and puntos_minimos < 0:
+            self.add_error('puntos_minimos', 'Los puntos deben ser un valor mayor o igual a cero')
+
+        if nivel_minimo is not None and nivel_minimo < 0:
+            self.add_error('nivel_minimo', 'El nivel debe ser un valor mayor o igual a cero')
+
+        return self.cleaned_data
 
 
 

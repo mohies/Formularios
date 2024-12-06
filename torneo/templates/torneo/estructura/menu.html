@@ -77,11 +77,20 @@
             </li>
 
 
+             <!-- Dropdown de Perfil -->
+             <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="dropdownFormularios" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    Perfil De Jugador
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownFormularios">
+                    <li><a class="dropdown-item" href="{% url 'crear_perfil_de_jugador' %}">Crear Perfil Jugador</a></li>
+                    <li><a class="dropdown-item" href="{% url 'buscar_perfil' %}">Buscar Perfil Jugador</a></li>
+                    <li><a class="dropdown-item" href="{% url 'lista_perfiles' %}">Lista Perfiles</a></li>
+                </ul>
+            </li>
 
-
-
-
-
+            
+            
 
         </ul>
 

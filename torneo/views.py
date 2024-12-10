@@ -572,11 +572,11 @@ def lista_juegos(request):
     return render(request, 'torneo/lista_juegos.html', {'juegos': juegos})
 
 
+
 def juego_buscar_avanzado(request):
     if len(request.GET) > 0:
         formulario = BusquedaJuegoForm(request.GET)
         if formulario.is_valid():
-            
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
             QJuegos = Juego.objects.all()
@@ -584,8 +584,8 @@ def juego_buscar_avanzado(request):
             # Obtenemos los filtros del formulario
             nombre = formulario.cleaned_data.get('nombre')
             genero = formulario.cleaned_data.get('genero')
-            fecha_creacion_desde = formulario.cleaned_data.get('fecha_creacion_desde')
-            fecha_creacion_hasta = formulario.cleaned_data.get('fecha_creacion_hasta')
+            descripcion = formulario.cleaned_data.get('descripcion')
+   
             
             # Aplicamos los filtros según corresponda
             if nombre:
@@ -596,13 +596,10 @@ def juego_buscar_avanzado(request):
                 QJuegos = QJuegos.filter(genero__icontains=genero)
                 mensaje_busqueda += f" Género que contenga la palabra '{genero}'\n"
             
-            if fecha_creacion_desde:
-                QJuegos = QJuegos.filter(fecha_creacion__gte=fecha_creacion_desde)
-                mensaje_busqueda += f" Fecha de creación desde: {fecha_creacion_desde.strftime('%d-%m-%Y')}\n"
+            if descripcion:
+                QJuegos = QJuegos.filter(descripcion__icontains=descripcion)
+                mensaje_busqueda += f" Descripción que contenga la palabra '{descripcion}'\n"
             
-            if fecha_creacion_hasta:
-                QJuegos = QJuegos.filter(fecha_creacion__lte=fecha_creacion_hasta)
-                mensaje_busqueda += f" Fecha de creación hasta: {fecha_creacion_hasta.strftime('%d-%m-%Y')}\n"
             
             # Ejecutamos la consulta
             juegos = QJuegos.all()
@@ -618,6 +615,8 @@ def juego_buscar_avanzado(request):
         formulario = BusquedaJuegoForm(None)
     
     return render(request, 'torneo/crearjuego/busqueda_avanzada.html', {"formulario": formulario})
+
+
 
 
 
@@ -703,7 +702,6 @@ def perfil_buscar_avanzado(request):
     if len(request.GET) > 0:
         formulario = BusquedaAvanzadaPerfilJugadorForm(request.GET)
         if formulario.is_valid():
-            
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
             QPerfiles = PerfilDeJugador.objects.all()
@@ -712,8 +710,6 @@ def perfil_buscar_avanzado(request):
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
             puntos_minimos = formulario.cleaned_data.get('puntos_minimos')
             nivel_minimo = formulario.cleaned_data.get('nivel_minimo')
-            fecha_desde = formulario.cleaned_data.get('fecha_desde')
-            fecha_hasta = formulario.cleaned_data.get('fecha_hasta')
             
             # Aplicamos los filtros según corresponda
             if textoBusqueda:
@@ -727,14 +723,6 @@ def perfil_buscar_avanzado(request):
             if nivel_minimo is not None:
                 QPerfiles = QPerfiles.filter(nivel__gte=nivel_minimo)
                 mensaje_busqueda += f" Nivel mayor o igual a {nivel_minimo}\n"
-            
-            if fecha_desde:
-                QPerfiles = QPerfiles.filter(fecha_creacion__gte=fecha_desde)
-                mensaje_busqueda += f" Fecha de creación desde: {fecha_desde.strftime('%d-%m-%Y')}\n"
-            
-            if fecha_hasta:
-                QPerfiles = QPerfiles.filter(fecha_creacion__lte=fecha_hasta)
-                mensaje_busqueda += f" Fecha de creación hasta: {fecha_hasta.strftime('%d-%m-%Y')}\n"
             
             # Ejecutamos la consulta
             perfiles = QPerfiles.all()
@@ -750,6 +738,7 @@ def perfil_buscar_avanzado(request):
         formulario = BusquedaAvanzadaPerfilJugadorForm(None)
     
     return render(request, 'torneo/crearperfil/busqueda_avanzada.html', {"formulario": formulario})
+
 
 
 

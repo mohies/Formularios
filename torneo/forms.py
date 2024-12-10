@@ -509,11 +509,19 @@ class BusquedaUsuarioForm(forms.Form):
     
 class JuegoForm(forms.ModelForm):
     class Meta:
+        genero_choices = [
+        ('', 'Seleccione un género'), 
+        ('accion', 'Acción'),
+        ('aventura', 'Aventura'),
+        ('deportes', 'Deportes'),
+        ('estrategia', 'Estrategia'),
+   
+        ]
         model = Juego  # Modelo asociado al formulario
         fields = ['nombre', 'genero', 'id_consola', 'descripcion', 'torneo']  # Campos a incluir en el formulario
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
-            'genero': forms.TextInput(attrs={'class': 'form-control'}),
+            'genero': forms.Select(choices=genero_choices, attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control'}),
             'torneo': forms.Select(attrs={'class': 'form-control'}),
             'id_consola': forms.Select(attrs={'class': 'form-control'}),
@@ -551,7 +559,6 @@ class JuegoForm(forms.ModelForm):
         # Siempre devolvemos el conjunto de datos
         return self.cleaned_data
 
-
 class BusquedaJuegoForm(forms.Form):
     nombre = forms.CharField(
         required=False,
@@ -559,45 +566,48 @@ class BusquedaJuegoForm(forms.Form):
         label="Nombre del Juego"
     )
 
-    genero = forms.CharField(
+    # Cambiar a un ChoiceField para el campo de género
+    genero_choices = [
+        ('', 'Seleccione un género'),  # Opción vacía por defecto
+        ('accion', 'Acción'),
+        ('aventura', 'Aventura'),
+        ('deportes', 'Deportes'),
+        ('estrategia', 'Estrategia'),
+      
+    ]
+    genero = forms.ChoiceField(
+        choices=genero_choices,
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Género del juego'}),
+        widget=forms.Select(attrs={'class': 'form-control'}),
         label="Género"
     )
 
-    fecha_creacion_desde = forms.DateField(
+    descripcion = forms.CharField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        label="Fecha de creación desde"
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Descripción del juego'}),
+        label="Descripción"
     )
 
-    fecha_creacion_hasta = forms.DateField(
-        required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        label="Fecha de creación hasta"
-    )
+
 
     def clean(self):
         super().clean()
 
         nombre = self.cleaned_data.get('nombre')
         genero = self.cleaned_data.get('genero')
-        fecha_creacion_desde = self.cleaned_data.get('fecha_creacion_desde')
-        fecha_creacion_hasta = self.cleaned_data.get('fecha_creacion_hasta')
+        descripcion = self.cleaned_data.get('descripcion')
+        torneo = self.cleaned_data.get('torneo')
 
-        # Validación: Al menos un campo debe estar lleno
-        if not (nombre or genero or fecha_creacion_desde or fecha_creacion_hasta):
-            self.add_error('nombre', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('genero', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_creacion_desde', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_creacion_hasta', 'Debe introducir al menos un valor en un campo del formulario')
-
-        # Validación: La fecha "hasta" no puede ser menor que la fecha "desde"
-        if fecha_creacion_desde and fecha_creacion_hasta and fecha_creacion_hasta < fecha_creacion_desde:
-            self.add_error('fecha_creacion_hasta', 'La fecha "hasta" no puede ser anterior a la fecha "desde"')
+        # Validación: Al menos tres campos deben estar llenos
+        if not (nombre or genero or descripcion or torneo):
+            self.add_error('nombre', 'Debe introducir al menos tres campos para realizar la búsqueda')
+            self.add_error('genero', 'Debe introducir al menos tres campos para realizar la búsqueda')
+            self.add_error('descripcion', 'Debe introducir al menos tres campos para realizar la búsqueda')
 
         return self.cleaned_data
-    
+
+
+
     
 class PerfilDeJugadorForm(forms.ModelForm):
     class Meta:
@@ -668,7 +678,10 @@ class BusquedaPerfilJugadorForm(forms.Form):
     textoBusqueda = forms.CharField(required=False)
 
 class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
-    textoBusqueda = forms.CharField(required=False)
+    textoBusqueda = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'})
+    )
     
     # Campo para filtrar por puntos
     puntos_minimos = forms.IntegerField(
@@ -683,19 +696,6 @@ class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
         widget=forms.NumberInput(attrs={'placeholder': 'Introduce el nivel mínimo'})
     )
 
-    # Fecha de creación del perfil (si la tienes en el modelo)
-    fecha_desde = forms.DateField(
-        label="Fecha Desde", 
-        required=False, 
-        widget=DateInput(attrs={"type": "date", "class": "form-control"})
-    )
-
-    fecha_hasta = forms.DateField(
-        label="Fecha Hasta", 
-        required=False, 
-        widget=forms.DateInput(format="%Y-%m-%d", attrs={"type": "date", "class": "form-control"})
-    )
-
     def clean(self):
         super().clean()
 
@@ -703,27 +703,18 @@ class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
         textoBusqueda = self.cleaned_data.get('textoBusqueda')
         puntos_minimos = self.cleaned_data.get('puntos_minimos')
         nivel_minimo = self.cleaned_data.get('nivel_minimo')
-        fecha_desde = self.cleaned_data.get('fecha_desde')
-        fecha_hasta = self.cleaned_data.get('fecha_hasta')
 
         # Validar que al menos uno de los campos tenga un valor
-        if textoBusqueda == "" and puntos_minimos is None and nivel_minimo is None and fecha_desde is None and fecha_hasta is None:
-            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('puntos_minimos', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('nivel_minimo', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_desde', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_hasta', 'Debe introducir al menos un valor en un campo del formulario')
+        if not textoBusqueda and puntos_minimos is None and nivel_minimo is None:
+            raise forms.ValidationError(
+                "Debe introducir al menos un valor en uno de los campos del formulario"
+            )
 
         # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
-        if textoBusqueda != "" and len(textoBusqueda) < 3:
+        if textoBusqueda and len(textoBusqueda) < 3:
             self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
 
-        # La fecha hasta debe ser mayor o igual a la fecha desde
-        if fecha_desde and fecha_hasta and fecha_hasta < fecha_desde:
-            self.add_error('fecha_desde', 'La fecha hasta no puede ser menor que la fecha desde')
-            self.add_error('fecha_hasta', 'La fecha hasta no puede ser menor que la fecha desde')
-
-        # Validar que los puntos y el nivel sean mayores a cero si se ingresan
+        # Validar que los puntos y el nivel sean mayores o iguales a cero si se ingresan
         if puntos_minimos is not None and puntos_minimos < 0:
             self.add_error('puntos_minimos', 'Los puntos deben ser un valor mayor o igual a cero')
 

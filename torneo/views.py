@@ -72,6 +72,7 @@ def torneo_buscar_avanzado(request):
             fechaHasta = formulario.cleaned_data.get('fecha_hasta')
             duracionMinima = formulario.cleaned_data.get('duracion_minima')
             
+            
             # Por cada filtro comprobamos si tiene un valor y lo añadimos a la QuerySet
             if textoBusqueda != "":
                 QStorneos = QStorneos.filter(Q(nombre__icontains=textoBusqueda) | Q(descripcion__icontains=textoBusqueda) |Q(categoria__contains=textoBusqueda))
@@ -305,6 +306,7 @@ def participante_buscar_avanzado(request):
             puntos_maximos = formulario.cleaned_data.get('puntos_maximos')
             tiempo_jugado_minimo = formulario.cleaned_data.get('tiempo_jugado_minimo')
             tiempo_jugado_maximo = formulario.cleaned_data.get('tiempo_jugado_maximo')
+            equipos = formulario.cleaned_data.get('equipos')
             
             # Aplicamos los filtros según corresponda
             if textoBusqueda:
@@ -334,6 +336,19 @@ def participante_buscar_avanzado(request):
             if tiempo_jugado_maximo is not None:
                 QSparticipantes = QSparticipantes.filter(tiempo_jugado__lte=tiempo_jugado_maximo)
                 mensaje_busqueda += f" Tiempo jugado máximo: {tiempo_jugado_maximo} horas\n"
+                
+            if equipos is not None:
+                # Extraer los nombres de los equipos (solo el campo 'nombre' de cada objeto Equipo)
+                nombres_equipos = equipos.values_list('nombre', flat=True)
+
+                # Filtrar QSparticipantes por los nombres de los equipos
+                QSparticipantes = QSparticipantes.filter(equipos__nombre__in=nombres_equipos)
+
+                # Actualizar el mensaje de búsqueda con los nombres de los equipos
+                mensaje_busqueda += f" Buscado por equipos: {', '.join(nombres_equipos)} \n"
+
+
+                            
             
             # Ejecutamos la consulta
             participantes = QSparticipantes.all()

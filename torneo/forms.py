@@ -217,8 +217,8 @@ class EquipoForm(forms.ModelForm):
             self.add_error('logotipo', 'El logotipo debe ser una URL válida.')
 
         # Validar que la fecha de ingreso no sea futura
-        if fecha_ingreso and fecha_ingreso > date.today():
-            self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura.')
+        if fecha_ingreso and fecha_ingreso > date.today() or fecha_ingreso<date.today():
+            self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura ni menor.')
 
         # Validar que los puntos contribuidos sean positivos
         if puntos_contribuidos is not None and puntos_contribuidos < 0:
@@ -503,7 +503,8 @@ class BusquedaUsuarioForm(forms.Form):
     )
     fecha_registro_hasta = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        widget=forms.DateInput(format="%Y-%m-%d",attrs={"type": "date", "class": "form-control"}),
+        initial=datetime.date.today,
         label="Fecha de registro hasta"
     )
 
@@ -701,7 +702,8 @@ class BusquedaPerfilJugadorForm(forms.Form):
 class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
     textoBusqueda = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'})
+        widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'}),
+        label='Nombre del Perfil'
     )
     
     # Campo para filtrar por puntos
@@ -726,10 +728,10 @@ class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
         nivel_minimo = self.cleaned_data.get('nivel_minimo')
 
         # Validar que al menos uno de los campos tenga un valor
-        if not textoBusqueda and puntos_minimos is None and nivel_minimo is None:
-            raise forms.ValidationError(
-                "Debe introducir al menos un valor en uno de los campos del formulario"
-            )
+        if not textoBusqueda or puntos_minimos or None or nivel_minimo is None:
+            self.add_error('textoBusqueda', 'Debe introducir al menos uno de los campos')
+            self.add_error('puntos_minimos', 'Debe introducir al menos uno de los campos')
+            self.add_error('nivel_minimo', 'Debe introducir al menos uno de los campos')
 
         # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
         if textoBusqueda and len(textoBusqueda) < 3:

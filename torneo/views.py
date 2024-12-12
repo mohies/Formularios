@@ -88,6 +88,7 @@ def torneo_buscar_avanzado(request):
                 mensaje_busqueda += f" Fecha hasta: {fechaHasta.strftime('%d-%m-%Y')}\n"
                 QStorneos = QStorneos.filter(fecha_inicio__lte=fechaHasta)
             
+
             
             # Ejecutamos la consulta
             torneos = QStorneos.all()

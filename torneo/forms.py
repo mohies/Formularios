@@ -141,32 +141,30 @@ class BusquedaAvanzadaTorneoForm(forms.Form):
 
         # Obtenemos los campos
         textoBusqueda = self.cleaned_data.get('textoBusqueda')
-        categorias = self.cleaned_data.get('categorias')
         fecha_desde = self.cleaned_data.get('fecha_desde')
         fecha_hasta = self.cleaned_data.get('fecha_hasta')
         duracion_minima = self.cleaned_data.get('duracion_minima')
 
         # Controlamos que al menos se haya introducido un valor en uno de los campos
-        if textoBusqueda == "" or len(categorias) == 0 or fecha_desde is None or fecha_hasta is None or duracion_minima is None:
-            self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('categorias', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_desde', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('fecha_hasta', 'Debe introducir al menos un valor en un campo del formulario')
-            self.add_error('duracion_minima', 'Debe introducir al menos un valor en un campo del formulario')
-        else:
+        if not textoBusqueda and not fecha_desde and not fecha_hasta and not duracion_minima:
+            error_message = 'Debe introducir al menos un valor en un campo del formulario'
+            self.add_error('textoBusqueda', error_message)
+            self.add_error('fecha_desde', error_message)
+            self.add_error('fecha_hasta', error_message)
+            self.add_error('duracion_minima', error_message)
             # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
-            if textoBusqueda != "" and len(textoBusqueda) < 3:
+        if textoBusqueda != "" and len(textoBusqueda) < 3:
                 self.add_error('textoBusqueda', 'Debe introducir al menos 3 caracteres')
 
             # La fecha hasta debe ser mayor o igual a la fecha desde, si ambas se introducen
-            if fecha_desde and fecha_hasta and fecha_hasta < fecha_desde:
+        if fecha_desde and fecha_hasta and fecha_hasta < fecha_desde:
                 self.add_error('fecha_desde', 'La fecha hasta no puede ser menor que la fecha desde')
                 self.add_error('fecha_hasta', 'La fecha hasta no puede ser menor que la fecha desde')
 
             # Si se especifica una duración mínima, debe ser un tiempo positivo
-            if duracion_minima:
-                if duracion_minima.total_seconds() <= 0:
-                    self.add_error('duracion_minima', 'La duración mínima debe ser un tiempo válido y mayor que cero')
+        if duracion_minima:
+            if duracion_minima.total_seconds() <= 0:
+                self.add_error('duracion_minima', 'La duración mínima debe ser un tiempo válido y mayor que cero')
 
         # Siempre devolvemos el conjunto de datos
         return self.cleaned_data

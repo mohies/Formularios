@@ -64,7 +64,7 @@ def torneo_buscar_avanzado(request):
             
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QStorneos = Torneo.objects.prefetch_related("participante_torneo")
+            QStorneos = Torneo.objects.prefetch_related("participantes")
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')

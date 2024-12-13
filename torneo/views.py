@@ -9,7 +9,7 @@ def index(request):
 
 def lista_torneo(request):
     torneos = Torneo.objects.prefetch_related('participantes__usuario').all()
-    return render(request, 'torneo/lista_torneo.html', {'torneos': torneos})
+    return render(request, 'torneo/lista_torneos.html', {'torneos': torneos})
 
 
 
@@ -64,7 +64,7 @@ def torneo_buscar_avanzado(request):
             
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QStorneos = Torneo.objects.all()
+            QStorneos = Torneo.objects.prefetch_related("participante_torneo")
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
@@ -180,7 +180,7 @@ def equipo_buscar_avanzado(request):
             
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QSequipos = Equipo.objects.all()
+            QSequipos = Equipo.objects
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
@@ -253,7 +253,7 @@ def equipo_editar(request, equipo_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/crearequipo/crear_equipo.html',  # Cambia la ruta de la plantilla según la estructura de tu proyecto
+        'torneo/crearequipo/crear_equipo.html',  
         {"formulario": formulario, "equipo": equipo}
     )
     
@@ -295,7 +295,7 @@ def participante_buscar_avanzado(request):
             
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QSparticipantes = Participante.objects.all()
+            QSparticipantes = Participante.objects.select_related("usuario").prefetch_related("equipos")
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
@@ -387,7 +387,7 @@ def participante_editar(request, participante_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/crearparticipante/crear_participante.html',  # Cambia la ruta de la plantilla según la estructura de tu proyecto
+        'torneo/crearparticipante/crear_participante.html',  
         {"formulario": formulario, "participante": participante}
     )
 
@@ -435,7 +435,7 @@ def usuario_buscar_avanzado(request):
             
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QSusarios = Usuario.objects.all()
+            QSusarios = Usuario.objects
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
@@ -510,7 +510,7 @@ def usuario_editar(request, usuario_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/crearusuario/crear_usuario.html',  # Asegúrate de tener la plantilla adecuada para editar el usuario
+        'torneo/crearusuario/crear_usuario.html',  
         {"formulario": formulario, "usuario": usuario}
     )
 
@@ -579,7 +579,7 @@ def juego_buscar_avanzado(request):
         if formulario.is_valid():
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QJuegos = Juego.objects.all()
+            QJuegos = Juego.objects.prefetch_related("torneos")
             
             # Obtenemos los filtros del formulario
             nombre = formulario.cleaned_data.get('nombre')
@@ -649,7 +649,7 @@ def juego_editar(request, juego_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/crearjuego/crear_juego.html',  # Asegúrate de tener la plantilla adecuada para editar el juego
+        'torneo/crearjuego/crear_juego.html',  
         {"formulario": formulario, "juego": juego}
     )
 
@@ -704,7 +704,7 @@ def perfil_buscar_avanzado(request):
         if formulario.is_valid():
             mensaje_busqueda = "Se ha buscado por los siguientes valores:\n"
             
-            QPerfiles = PerfilDeJugador.objects.all()
+            QPerfiles = PerfilDeJugador.objects.select_related("usuario")
             
             # Obtenemos los filtros del formulario
             textoBusqueda = formulario.cleaned_data.get('textoBusqueda')
@@ -780,7 +780,7 @@ def perfil_editar(request, perfil_id):
     # Renderizamos el formulario de edición
     return render(
         request,
-        'torneo/crearperfil/crear_perfil_de_jugador.html',  # Asegúrate de tener la plantilla adecuada para editar el perfil
+        'torneo/crearperfil/crear_perfil_de_jugador.html', 
         {"formulario": formulario, "perfil": perfil}
     )
 
@@ -803,7 +803,7 @@ def perfil_eliminar(request, perfil_id):
         print(error)
     
     # Redirigimos a la lista de perfiles
-    return redirect('lista_perfiles')  # Asegúrate de tener configurada esta URL
+    return redirect('lista_perfiles') 
 
 
 

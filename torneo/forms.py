@@ -5,7 +5,7 @@ from datetime import datetime, date, timedelta
 from django.forms import DateInput
 
 class TorneoForm(forms.ModelForm):
-    # Definimos los campos, aunque estos se tomarán directamente del modelo, así que puedes dejarlos como están si quieres personalizar algo.
+    
     
     DURACIONES = [
         ('1:00', '1 hora'),
@@ -56,7 +56,7 @@ class TorneoForm(forms.ModelForm):
         #predefinidas de Django (como asegurarse de que los campos requeridos estén presentes, que los campos numéricos sean válidos, etc.), 
         #y luego se devuelve un diccionario cleaned_data con los valores validados de los campos.
 
-        #una vez calidado accedes a los valores del clean y ya luego podemos añadir nuestros propios errores
+        #una vez calidado accedemos a los valores del clean y ya luego podemos añadir nuestros propios errores
         nombre = self.cleaned_data.get('nombre')
         descripcion = self.cleaned_data.get('descripcion')
         fecha_inicio = self.cleaned_data.get('fecha_inicio')
@@ -70,9 +70,13 @@ class TorneoForm(forms.ModelForm):
             duracion = timedelta(hours=horas, minutes=minutos)
 
         # Validaciones personalizadas (como las tenías)
-        torneo_existente = Torneo.objects.filter(nombre=nombre).first()
-        if torneo_existente:
-            self.add_error('nombre', 'Ya existe un torneo con ese nombre.')
+            torneoNombre = Torneo.objects.filter(nombre=nombre).first()
+            if(not torneoNombre is None
+            ):
+                if(not self.instance is None and torneoNombre.id == self.instance.id):
+                    pass
+                else:
+                    self.add_error('nombre','Ya existe un torneo con ese nombre')
 
         if descripcion and len(descripcion) < 20:
             self.add_error('descripcion', 'La descripción debe tener al menos 20 caracteres.')
@@ -104,7 +108,7 @@ class BusquedaTorneoForm(forms.Form):
 class BusquedaAvanzadaTorneoForm(forms.Form):
     textoBusqueda = forms.CharField(required=False)
     
-    # Supongo que tienes una lista de categorías o algo similar en tu modelo de Torneo
+    
     categorias = forms.CharField(
     required=False,
     widget=forms.TextInput(attrs={'placeholder': 'Introduce las categorías separadas por comas'})
@@ -196,8 +200,13 @@ class EquipoForm(forms.ModelForm):
         puntos_contribuidos = self.cleaned_data.get('puntos_contribuidos')
 
         # Validar que el nombre no esté vacío ni solo contenga espacios
-        if not nombre or not nombre.strip():
-            self.add_error('nombre', 'El nombre del equipo es obligatorio.')
+        equipoNombre = Equipo.objects.filter(nombre=nombre).first()
+        if(not equipoNombre is None
+           ):
+             if(not self.instance is None and equipoNombre.id == self.instance.id):
+                 pass
+             else:
+                self.add_error('nombre','Ya existe un equipo con ese nombre')
 
         # Validación de unicidad del nombre
         equipo_existente = Equipo.objects.filter(nombre=nombre).first()
@@ -264,7 +273,7 @@ class BusquedaAvanzadaEquipoForm(forms.Form):
         puntos_minimos = self.cleaned_data.get('puntos_minimos')
         puntos_maximos = self.cleaned_data.get('puntos_maximos')
 
-        if not (textoBusqueda and fecha_ingreso_desde and fecha_ingreso_hasta and puntos_minimos and puntos_maximos):
+        if not (textoBusqueda or fecha_ingreso_desde or fecha_ingreso_hasta or puntos_minimos or puntos_maximos):
             self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('fecha_ingreso_desde', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('fecha_ingreso_hasta', 'Debe introducir al menos un valor en un campo del formulario')
@@ -566,7 +575,6 @@ class BusquedaJuegoForm(forms.Form):
         label="Nombre del Juego"
     )
 
-    # Cambiar a un ChoiceField para el campo de género
     genero_choices = [
         ('', 'Seleccione un género'),  # Opción vacía por defecto
         ('accion', 'Acción'),
@@ -683,7 +691,7 @@ class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'})
     )
     
-    # Campo para filtrar por puntos
+ 
     puntos_minimos = forms.IntegerField(
         label="Puntos Mínimos", 
         required=False, 

@@ -147,7 +147,7 @@ class BusquedaAvanzadaTorneoForm(forms.Form):
         duracion_minima = self.cleaned_data.get('duracion_minima')
 
         # Controlamos que al menos se haya introducido un valor en uno de los campos
-        if textoBusqueda == "" and len(categorias) == 0 and fecha_desde is None and fecha_hasta is None and duracion_minima is None:
+        if textoBusqueda == "" or len(categorias) == 0 or fecha_desde is None or fecha_hasta is None or duracion_minima is None:
             self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('categorias', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('fecha_desde', 'Debe introducir al menos un valor en un campo del formulario')

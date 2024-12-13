@@ -3,6 +3,7 @@ from django.forms import ModelForm  # Importa ModelForm directamente
 from .models import *
 from datetime import datetime, date, timedelta
 from django.forms import DateInput
+import datetime
 
 class TorneoForm(forms.ModelForm):
     
@@ -47,9 +48,12 @@ class TorneoForm(forms.ModelForm):
         help_text="Selecciona la duración del torneo"
     )
     
+    
+    
     class Meta:
         model = Torneo  # Asociamos el formulario al modelo Torneo
         fields = ['nombre', 'descripcion', 'fecha_inicio', 'categoria', 'participantes', 'duracion']  # Campos que se mostrarán en el formulario
+        
 
     def clean(self):
         super().clean() #se llama al clean ejecutan las validaciones 
@@ -116,10 +120,11 @@ class BusquedaAvanzadaTorneoForm(forms.Form):
 
     fecha_desde = forms.DateField(label="Fecha Desde", 
                                   required=False, 
-                                  widget=DateInput(attrs={"type": "date", "class": "form-control"}))
+                                  widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}))
 
     fecha_hasta = forms.DateField(label="Fecha Hasta", 
-                                  required=False, 
+                                  required=False,
+                                  initial=datetime.date.today,
                                   widget=forms.DateInput(format="%Y-%m-%d", 
                                                          attrs={"type": "date", "class": "form-control"}))
 
@@ -127,6 +132,8 @@ class BusquedaAvanzadaTorneoForm(forms.Form):
     duracion_minima = forms.TimeField(label="Duración mínima", 
                                       required=False, 
                                       widget=forms.TimeInput(attrs={"type": "time", "class": "form-control"}))
+    
+
 
     def clean(self):
         # Validamos con el formulario base
@@ -221,8 +228,8 @@ class EquipoForm(forms.ModelForm):
             self.add_error('logotipo', 'El logotipo debe ser una URL válida.')
 
         # Validar que la fecha de ingreso no sea futura
-        if fecha_ingreso and fecha_ingreso > date.today():
-            self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura.')
+        if fecha_ingreso and fecha_ingreso > date.today() or fecha_ingreso<date.today():
+            self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura ni menor.')
 
         # Validar que los puntos contribuidos sean positivos
         if puntos_contribuidos is not None and puntos_contribuidos < 0:
@@ -394,6 +401,12 @@ class BusquedaAvanzadaParticipanteForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label="Tiempo jugado máximo (en horas)"
     )
+    equipos = forms.ModelMultipleChoiceField(
+        queryset=Equipo.objects.all(),  # Obtienes todos los equipos de la base de datos
+        widget=forms.SelectMultiple(),  # Usas el widget de casillas múltiples
+        required=False,  # El campo no es obligatorio
+        help_text="Selecciona los equipos"  # Texto de ayuda
+    )
 
     def clean(self):
         super().clean()
@@ -405,9 +418,10 @@ class BusquedaAvanzadaParticipanteForm(forms.Form):
         puntos_maximos = self.cleaned_data.get('puntos_maximos')
         tiempo_jugado_minimo = self.cleaned_data.get('tiempo_jugado_minimo')
         tiempo_jugado_maximo = self.cleaned_data.get('tiempo_jugado_maximo')
+        equipos=self.cleaned_data.get('equipos');
 
         # Validación: Al menos un campo debe estar lleno
-        if not (textoBusqueda or fecha_inscripcion_desde or fecha_inscripcion_hasta or puntos_minimos or puntos_maximos or tiempo_jugado_minimo or tiempo_jugado_maximo):
+        if not (textoBusqueda or fecha_inscripcion_desde or fecha_inscripcion_hasta or puntos_minimos or puntos_maximos or tiempo_jugado_minimo or tiempo_jugado_maximo or equipos):
             self.add_error('textoBusqueda', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('fecha_inscripcion_desde', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('fecha_inscripcion_hasta', 'Debe introducir al menos un valor en un campo del formulario')
@@ -415,6 +429,7 @@ class BusquedaAvanzadaParticipanteForm(forms.Form):
             self.add_error('puntos_maximos', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('tiempo_jugado_minimo', 'Debe introducir al menos un valor en un campo del formulario')
             self.add_error('tiempo_jugado_maximo', 'Debe introducir al menos un valor en un campo del formulario')
+            self.add_error('equipos', 'introduce bien al menos un valor en cada campo o en el equipo')
 
         # Validación: La fecha "hasta" no puede ser menor que la fecha "desde"
         if fecha_inscripcion_desde and fecha_inscripcion_hasta and fecha_inscripcion_hasta < fecha_inscripcion_desde:
@@ -429,8 +444,8 @@ class BusquedaAvanzadaParticipanteForm(forms.Form):
         if tiempo_jugado_minimo is not None and tiempo_jugado_maximo is not None and tiempo_jugado_minimo > tiempo_jugado_maximo:
             self.add_error('tiempo_jugado_minimo', 'El tiempo jugado mínimo no puede ser mayor que el tiempo jugado máximo')
             self.add_error('tiempo_jugado_maximo', 'El tiempo jugado máximo no puede ser menor que el tiempo jugado mínimo')
-
-        return self.cleaned_data
+            
+       
     
 
 class UsuarioForm(forms.ModelForm):
@@ -461,16 +476,24 @@ class UsuarioForm(forms.ModelForm):
         super().clean()
 
         # Obtenemos los campos
+        nombre=self.cleaned_data.get("nombre")
         correo = self.cleaned_data.get('correo')
         clave_de_acceso = self.cleaned_data.get('clave_de_acceso')
 
         # Comprobamos si el correo ya está registrado
-        usuario_existente = Usuario.objects.filter(correo=correo).first()
-        if usuario_existente:
-            if self.instance and usuario_existente.id == self.instance.id:
-                pass
+        usuario_existente_por_correo = Usuario.objects.filter(correo=correo).first()
+        usuario_existente_por_nombre = Usuario.objects.filter(nombre=nombre).first()
+        if usuario_existente_por_correo:
+            if self.instance and usuario_existente_por_correo.id == self.instance.id:
+                pass  # Es el mismo usuario que estamos editando, no agregamos el error
             else:
                 self.add_error('correo', 'Ya existe un usuario con ese correo electrónico.')
+                
+        if usuario_existente_por_nombre:
+            if self.instance and usuario_existente_por_nombre.id == self.instance.id:
+                pass  # Es el mismo usuario que estamos editando, no agregamos el error
+            else:
+                self.add_error('nombre', 'Ya existe un usuario con ese nombre.')
 
         # Comprobamos que la clave de acceso tenga al menos 8 caracteres
         if clave_de_acceso and len(clave_de_acceso) < 8:
@@ -491,7 +514,8 @@ class BusquedaUsuarioForm(forms.Form):
     )
     fecha_registro_hasta = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        widget=forms.DateInput(format="%Y-%m-%d",attrs={"type": "date", "class": "form-control"}),
+        initial=datetime.date.today,
         label="Fecha de registro hasta"
     )
 
@@ -688,7 +712,8 @@ class BusquedaPerfilJugadorForm(forms.Form):
 class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
     textoBusqueda = forms.CharField(
         required=False,
-        widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'})
+        widget=forms.TextInput(attrs={'placeholder': 'Buscar por usuario'}),
+        label='Nombre del Perfil'
     )
     
  
@@ -713,10 +738,10 @@ class BusquedaAvanzadaPerfilJugadorForm(forms.Form):
         nivel_minimo = self.cleaned_data.get('nivel_minimo')
 
         # Validar que al menos uno de los campos tenga un valor
-        if not textoBusqueda and puntos_minimos is None and nivel_minimo is None:
-            raise forms.ValidationError(
-                "Debe introducir al menos un valor en uno de los campos del formulario"
-            )
+        if not textoBusqueda or puntos_minimos or None or nivel_minimo is None:
+            self.add_error('textoBusqueda', 'Debe introducir al menos uno de los campos')
+            self.add_error('puntos_minimos', 'Debe introducir al menos uno de los campos')
+            self.add_error('nivel_minimo', 'Debe introducir al menos uno de los campos')
 
         # Validar que el texto de búsqueda tenga al menos 3 caracteres si se ingresa algo
         if textoBusqueda and len(textoBusqueda) < 3:

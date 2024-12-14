@@ -221,7 +221,7 @@ class EquipoForm(forms.ModelForm):
             else:
                 self.add_error('nombre', 'Ya existe un equipo con ese nombre.')
 
-        # Validar que el logotipo sea una URL válida (opcional si no es obligatorio)
+        # Validar que el logotipo sea una URL válida 
         if logotipo and not logotipo.startswith(('http://', 'https://')):
             self.add_error('logotipo', 'El logotipo debe ser una URL válida.')
 
@@ -400,10 +400,10 @@ class BusquedaAvanzadaParticipanteForm(forms.Form):
         label="Tiempo jugado máximo (en horas)"
     )
     equipos = forms.ModelMultipleChoiceField(
-        queryset=Equipo.objects.all(),  # Obtienes todos los equipos de la base de datos
-        widget=forms.SelectMultiple(),  # Usas el widget de casillas múltiples
-        required=False,  # El campo no es obligatorio
-        help_text="Selecciona los equipos"  # Texto de ayuda
+        queryset=Equipo.objects.all(),  # obtenemos todos los equipos de la base de datos
+        widget=forms.SelectMultiple(),  #  el widget de casillas múltiples
+        required=False,  
+        help_text="Selecciona los equipos" 
     )
 
     def clean(self):
@@ -483,7 +483,7 @@ class UsuarioForm(forms.ModelForm):
         usuario_existente_por_nombre = Usuario.objects.filter(nombre=nombre).first()
         if usuario_existente_por_correo:
             if self.instance and usuario_existente_por_correo.id == self.instance.id:
-                pass  # Es el mismo usuario que estamos editando, no agregamos el error
+                pass  # Es el mismo correo que estamos editando, no agregamos el error
             else:
                 self.add_error('correo', 'Ya existe un usuario con ese correo electrónico.')
                 

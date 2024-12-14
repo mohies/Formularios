@@ -159,7 +159,7 @@ def crear_equipo(request):
     if request.method == "POST" and formulario.is_valid():  # Si el formulario es válido
         try:
             formulario.save()  # Guarda el equipo en la base de datos
-            return redirect("index")  # Redirige al índice o la página que desees
+            return redirect("index")  # Redirige al índice o la página que queramos
         except Exception as error:
             print(error)  # Imprime el error si ocurre alguno
 
@@ -348,9 +348,6 @@ def participante_buscar_avanzado(request):
                 # Actualizar el mensaje de búsqueda con los nombres de los equipos
                 mensaje_busqueda += f" Buscado por equipos: {', '.join(nombres_equipos)} \n"
 
-
-                            
-            
             # Ejecutamos la consulta
             participantes = QSparticipantes.all()
     
@@ -441,9 +438,6 @@ def crear_usuario(request):
     return render(request, 'torneo/crearusuario/crear_usuario.html', {'formulario': formulario})
 
 
-
-
-
 def usuario_buscar_avanzado(request):
     if len(request.GET) > 0:
         formulario = BusquedaUsuarioForm(request.GET)
@@ -491,7 +485,7 @@ def lista_usuarios(request):
     # Obtener todos los usuarios de la base de datos
     usuarios = Usuario.objects.all()
     
-    # Pasar los usuarios a la plantilla para su visualización
+    # Pasar los usuarios a la plantilla
     return render(request, 'torneo/lista_usuarios.html', {
         'usuarios': usuarios
     })
@@ -587,8 +581,6 @@ def lista_juegos(request):
     # Renderizar la plantilla y pasar los juegos como contexto
     return render(request, 'torneo/lista_juegos.html', {'juegos': juegos})
 
-
-
 def juego_buscar_avanzado(request):
     if len(request.GET) > 0:
         formulario = BusquedaJuegoForm(request.GET)
@@ -602,8 +594,6 @@ def juego_buscar_avanzado(request):
             genero = formulario.cleaned_data.get('genero')
             descripcion = formulario.cleaned_data.get('descripcion')
    
-            
-            # Aplicamos los filtros según corresponda
             if nombre:
                 QJuegos = QJuegos.filter(nombre__icontains=nombre)
                 mensaje_busqueda += f" Nombre que contenga la palabra '{nombre}'\n"
@@ -638,7 +628,7 @@ def juego_buscar_avanzado(request):
 
 def juego_editar(request, juego_id):
     # Obtenemos el juego correspondiente al ID proporcionado
-    juego = Juego.objects.get(id=juego_id)  # Usamos get directamente sin 404
+    juego = Juego.objects.get(id=juego_id)  
     
     datosFormulario = None  # Inicializamos la variable para los datos del formulario
 
@@ -762,14 +752,13 @@ def lista_perfiles(request):
     # Obtener todos los perfiles de jugadores de la base de datos
     perfiles = PerfilDeJugador.objects.all()
     
-    # Renderizar la plantilla y pasar los perfiles como contexto
     return render(request, 'torneo/lista_perfiles.html', {'perfiles': perfiles})
 
 
 
 def perfil_editar(request, perfil_id):
     # Obtenemos el perfil de jugador correspondiente al ID proporcionado
-    perfil = PerfilDeJugador.objects.get(id=perfil_id)  # Usamos get directamente sin 404
+    perfil = PerfilDeJugador.objects.get(id=perfil_id)  
     
     datosFormulario = None  # Inicializamos la variable para los datos del formulario
 

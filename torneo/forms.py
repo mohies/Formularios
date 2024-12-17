@@ -52,7 +52,11 @@ class TorneoForm(forms.ModelForm):
     
     class Meta:
         model = Torneo  # Asociamos el formulario al modelo Torneo
-        fields = ['nombre', 'descripcion', 'fecha_inicio', 'categoria', 'participantes', 'duracion']  # Campos que se mostrarán en el formulario
+        fields = ['nombre', 'descripcion', 'fecha_inicio', 'categoria', 'participantes', 'duracion']# Campos que se mostrarán en el formulario
+        widgets = {
+
+            'fecha_inicio': forms.DateInput(format="%Y-%m-%d",attrs={'type': 'date', 'class': 'form-control'})
+        }
         
 
     def clean(self):
@@ -176,7 +180,7 @@ class EquipoForm(forms.ModelForm):
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Introduce el nombre del equipo'}),
             'logotipo': forms.URLInput(attrs={'class': 'form-control'}),
-            'fecha_ingreso': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'fecha_ingreso': forms.DateInput(format="%Y-%m-%d",attrs={'type': 'date', 'class': 'form-control'}),
             'puntos_contribuidos': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         labels = {
@@ -226,7 +230,7 @@ class EquipoForm(forms.ModelForm):
             self.add_error('logotipo', 'El logotipo debe ser una URL válida.')
 
         # Validar que la fecha de ingreso no sea futura
-        if fecha_ingreso and fecha_ingreso > date.today() or fecha_ingreso<date.today():
+        if fecha_ingreso and (fecha_ingreso > date.today() or fecha_ingreso<date.today()):
             self.add_error('fecha_ingreso', 'La fecha de ingreso no puede ser futura ni menor.')
 
         # Validar que los puntos contribuidos sean positivos

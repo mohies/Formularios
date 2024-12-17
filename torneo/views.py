@@ -205,11 +205,11 @@ def equipo_buscar_avanzado(request):
                 mensaje_busqueda += f" Fecha de ingreso hasta: {fecha_ingreso_hasta.strftime('%d-%m-%Y')}\n"
             
             if puntos_minimos is not None:
-                QSequipos = QSequipos.filter(puntos__gte=puntos_minimos)
+                QSequipos = QSequipos.filter(puntos_contribuidos__gte=puntos_minimos)
                 mensaje_busqueda += f" Puntos mínimos: {puntos_minimos}\n"
             
             if puntos_maximos is not None:
-                QSequipos = QSequipos.filter(puntos__lte=puntos_maximos)
+                QSequipos = QSequipos.filter(puntos_contribuidos__lte=puntos_maximos)
                 mensaje_busqueda += f" Puntos máximos: {puntos_maximos}\n"
             
             # Ejecutamos la consulta
@@ -248,7 +248,7 @@ def equipo_editar(request, equipo_id):
                     request,
                     f"Se ha editado el equipo '{formulario.cleaned_data.get('nombre')}' correctamente."
                 )
-                return redirect('lista_equipo')  # Redirigimos a la lista de equipos
+                return redirect('lista_equipos')  # Redirigimos a la lista de equipos
             except Exception as error:
                 print(error)  # Imprimimos el error en la consola para depuración
     
